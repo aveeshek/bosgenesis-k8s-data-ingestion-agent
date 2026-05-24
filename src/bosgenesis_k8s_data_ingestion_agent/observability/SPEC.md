@@ -1,14 +1,17 @@
 # Observability Module Specification
 
-## Role
+## Implemented status
 
-Observability will emit traces, spans, metrics, and structured logs for every scan.
+Observability currently provides detailed structured JSON logging.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Create Langfuse trace per scan when enabled.
-- Create OpenTelemetry spans for scan, collector, MCP call, normalization, change detection, and sink operations.
-- Export OTLP traces to SigNoz when enabled.
-- Produce structured JSON logs.
-- Include run status, latency, counts, and error summaries.
+- `JsonFormatter` emits timestamp, level, logger, message, module, function, line, process, thread, and extra fields.
+- `configure_logging()` installs JSON logging for the root logger.
+- Scan, MCP, scheduler, and sink lifecycle events include structured `event` metadata.
 
+## Not implemented yet
+
+- Langfuse traces.
+- OpenTelemetry/SigNoz spans.
+- Metrics exporters.

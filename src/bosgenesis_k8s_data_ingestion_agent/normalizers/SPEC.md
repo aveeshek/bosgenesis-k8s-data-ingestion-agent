@@ -1,30 +1,30 @@
 # Normalizers Module Specification
 
-## Role
+## Implemented status
 
-Normalizers will transform raw MCP payloads into canonical observation records.
+Normalizers convert raw Kubernetes and Helm MCP bundles into canonical `Observation` records.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Convert heterogeneous Kubernetes and Helm payloads into a common observation shape.
-- Preserve raw payload references where configured.
-- Create stable entity identifiers.
-- Extract status summaries for analytics and memory.
-- Prepare hash input payloads by excluding volatile fields.
+- Route bundles by source through `normalize_all`.
+- Normalize Kubernetes pods, deployments, statefulsets, services, ingresses, PVCs, and events.
+- Normalize Helm releases.
+- Redact secret-like fields from raw and normalized payloads.
+- Extract entity name, UID, type, status summary, and namespace.
+- Populate `hash_input` from normalized payloads.
 
 ## Canonical observation fields
 
-- Observation identifier.
-- Run identifier.
-- Source.
-- Namespace.
-- Entity type.
-- Entity name.
-- Entity UID when available.
-- Observed timestamp.
-- Status summary.
-- Raw payload.
-- Normalized payload.
-- Hash input.
-- Content hash placeholder.
-
+- observation ID
+- run ID
+- source
+- namespace
+- entity type
+- entity name
+- entity UID when available
+- observed timestamp
+- status summary
+- raw payload
+- normalized payload
+- hash input
+- content hash

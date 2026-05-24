@@ -1,13 +1,17 @@
 # Schema Knowledge Specification
 
-## Role
+## Implemented status
 
-This directory will hold future schema specifications for observations, run summaries, snapshots, and analytical facts.
+Datastore schema initialization assets exist under the root `sinks` folder.
 
-## Responsibilities
+## Implemented schema assets
 
-- Define PostgreSQL schema intent.
-- Define ClickHouse table intent.
-- Define vector-memory metadata shape.
-- Define API response schemas.
+- PostgreSQL: `sinks/postgresql/init_schema.sql`
+- pgvector optional table: `sinks/postgresql/init_pgvector.sql`
+- ClickHouse: `sinks/clickhouse/init_schema.sql`
+- Qdrant collection payload: `sinks/qdrant/collection_payload.json`
+- Redis keyspace: `sinks/redis/keyspace.md`
 
+## Runtime schema usage
+
+Sink adapters write to the PostgreSQL, ClickHouse, Qdrant, and Redis shapes defined by those assets.

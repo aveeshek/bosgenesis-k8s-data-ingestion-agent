@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "data-ingestion-agent.name" . }}-config
+  namespace: {{ include "data-ingestion-agent.namespace" . }}
+  labels:
+    {{- include "data-ingestion-agent.labels" . | nindent 4 }}
+data:
+  AGENT_NAMESPACE: {{ .Values.config.agentNamespace | quote }}
+  AGENT_SCAN_INTERVAL_SECONDS: {{ .Values.config.scanIntervalSeconds | quote }}
+  AGENT_RUN_ON_STARTUP: {{ .Values.config.runOnStartup | quote }}
+  AGENT_STRICT_SINKS: {{ .Values.config.strictSinks | quote }}
+  API_ENABLED: "true"
+  API_HOST: {{ .Values.config.apiHost | quote }}
+  API_PORT: {{ .Values.config.apiPort | quote }}
+  K8S_MCP_ENABLED: "true"
+  K8S_MCP_URL: {{ .Values.config.k8sMcpUrl | quote }}
+  HELM_MCP_ENABLED: "true"
+  HELM_MCP_URL: {{ .Values.config.helmMcpUrl | quote }}
+  POSTGRES_ENABLED: {{ .Values.config.postgresEnabled | quote }}
+  CLICKHOUSE_ENABLED: {{ .Values.config.clickhouseEnabled | quote }}
+  CLICKHOUSE_HOST: {{ .Values.config.clickhouseHost | quote }}
+  CLICKHOUSE_PORT: {{ .Values.config.clickhousePort | quote }}
+  CLICKHOUSE_USER: {{ .Values.config.clickhouseUser | quote }}
+  CLICKHOUSE_DATABASE: {{ .Values.config.clickhouseDatabase | quote }}
+  QDRANT_ENABLED: {{ .Values.config.qdrantEnabled | quote }}
+  QDRANT_URL: {{ .Values.config.qdrantUrl | quote }}
+  QDRANT_COLLECTION: {{ .Values.config.qdrantCollection | quote }}
+  QDRANT_VECTOR_SIZE: {{ .Values.config.qdrantVectorSize | quote }}
+  REDIS_ENABLED: {{ .Values.config.redisEnabled | quote }}
+  REDIS_HOST: {{ .Values.config.redisHost | quote }}
+  REDIS_PORT: {{ .Values.config.redisPort | quote }}
+  REDIS_DB: {{ .Values.config.redisDb | quote }}
+  REDIS_KEY_PREFIX: {{ .Values.config.redisKeyPrefix | quote }}
+  STDOUT_ENABLED: {{ .Values.config.stdoutEnabled | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  OTEL_SERVICE_NAME: {{ include "data-ingestion-agent.name" . | quote }}
+

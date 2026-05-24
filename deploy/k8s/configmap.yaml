@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bosgenesis-k8s-data-ingestion-agent-config
+  namespace: bosgenesis
+  labels:
+    app.kubernetes.io/name: bosgenesis-k8s-data-ingestion-agent
+    app.kubernetes.io/part-of: bosgenesis
+data:
+  AGENT_NAMESPACE: "bosgenesis"
+  AGENT_SCAN_INTERVAL_SECONDS: "3600"
+  AGENT_RUN_ON_STARTUP: "true"
+  AGENT_STRICT_SINKS: "false"
+  API_ENABLED: "true"
+  API_HOST: "0.0.0.0"
+  API_PORT: "8080"
+  K8S_MCP_ENABLED: "true"
+  K8S_MCP_URL: "http://bosgenesis-k8s-inspector-mcp.bosgenesis.svc.cluster.local:8080/mcp"
+  HELM_MCP_ENABLED: "true"
+  HELM_MCP_URL: "http://bosgenesis-helm-manager-mcp.bosgenesis.svc.cluster.local:8080/mcp"
+  POSTGRES_ENABLED: "true"
+  CLICKHOUSE_ENABLED: "true"
+  CLICKHOUSE_HOST: "clickhouse.bosgenesis.svc.cluster.local"
+  CLICKHOUSE_PORT: "8123"
+  CLICKHOUSE_USER: "bosgenesis"
+  CLICKHOUSE_DATABASE: "bosgenesis_k8s_ingestion"
+  QDRANT_ENABLED: "true"
+  QDRANT_URL: "http://qdrant.bosgenesis.svc.cluster.local:6333"
+  QDRANT_COLLECTION: "bosgenesis_k8s_observations"
+  QDRANT_VECTOR_SIZE: "1536"
+  REDIS_ENABLED: "true"
+  REDIS_HOST: "redis-master.bosgenesis.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  REDIS_KEY_PREFIX: "bg:k8s-ingestion"
+  STDOUT_ENABLED: "false"
+  LOG_LEVEL: "INFO"
+  OTEL_SERVICE_NAME: "bosgenesis-k8s-data-ingestion-agent"
+

@@ -1,13 +1,11 @@
 # Helm Charts Specification
 
-## Role
+## Implemented status
 
-The `charts` directory will contain Helm packaging for the agent after the no-code scaffold is approved.
+The `charts` directory contains a Helm v3 application chart for the agent.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Package Kubernetes deployment resources.
-- Provide environment-specific values.
-- Support configurable sinks and observability.
-- Keep secrets injected through Kubernetes Secret references.
-
+- Package Deployment, Service, ConfigMap, ServiceAccount, optional Secret, and optional Ingress.
+- Configure runtime mode, image repository/tag, scheduler interval, MCP endpoints, sinks, and resources through values.
+- Keep secret values behind optional Kubernetes Secret creation or external secret reference.

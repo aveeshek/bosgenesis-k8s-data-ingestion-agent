@@ -1,13 +1,23 @@
 # Helm Templates Specification
 
-## Role
+## Implemented status
 
-This directory will hold Helm templates for Kubernetes resources after implementation begins.
+This directory contains executable Helm templates.
+
+## Implemented templates
+
+- `_helpers.tpl`
+- `configmap.yaml`
+- `secret.yaml`
+- `serviceaccount.yaml`
+- `deployment.yaml`
+- `service.yaml`
+- `ingress.yaml`
+- `NOTES.txt`
 
 ## Responsibilities
 
 - Render namespace-scoped resources.
-- Support optional components through values.
-- Enforce consistent labels and annotations.
-- Include observability annotations when configured.
-
+- Support optional Secret and Ingress.
+- Use consistent labels.
+- Pass runtime mode and environment settings to the container.

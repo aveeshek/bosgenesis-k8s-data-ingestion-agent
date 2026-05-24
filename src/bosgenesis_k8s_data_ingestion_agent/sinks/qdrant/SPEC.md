@@ -1,13 +1,22 @@
 # Qdrant Sink Specification
 
-## Role
+## Implemented status
 
-The Qdrant sink will store semantic operational memory records when enabled.
+`QdrantSink` stores semantic operational memory points from either changed observations or prebuilt memory records.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Build memory documents from useful observations.
-- Attach metadata for namespace, entity type, entity name, run id, and hash.
-- Avoid high-volume noisy data by default.
-- Support future troubleshooting and MoP-generation retrieval.
+- Build legacy memory text from each changed record through `write()`.
+- Accept session, episodic, and semantic `MemoryRecord` objects through `write_memory()`.
+- Create deterministic point IDs from entity key and content hash.
+- Attach run, correlation, namespace, source, entity, memory type, hash, status, and metadata payload.
+- Use pluggable embedding function.
+- Default to zero vectors when no embedding provider is configured.
 
+## Configuration
+
+- `QDRANT_ENABLED`
+- `QDRANT_URL`
+- `QDRANT_API_KEY`
+- `QDRANT_COLLECTION`
+- `QDRANT_VECTOR_SIZE`

@@ -1,25 +1,28 @@
 # Sinks Module Specification
 
-## Role
+## Implemented status
 
-Sinks will persist or emit scan observations and run summaries.
+The sink layer contains the common interface, sink router, serialization helpers, and concrete sink adapters.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Define common sink interface.
-- Route writes to enabled sinks.
-- Track per-sink success, latency, and failures.
-- Support strict and non-strict error policy.
-- Fall back to stdout or streaming output when no persistence sink is enabled.
+- `BaseSink` protocol.
+- `SinkRouter` writes to enabled sinks.
+- Strict and non-strict sink error policy.
+- Per-sink `SinkResult` with attempted/written counts and latency.
+- Serialization helpers for JSON-safe sink payloads.
+- Memory-capable sinks can also implement `write_memory(run_context, memory_records)`.
 
-## Sink families
+## Implemented sinks
 
-- PostgreSQL.
-- ClickHouse.
-- Qdrant.
-- pgvector.
-- Redis.
-- LangMem.
-- Letta disabled adapter.
-- Stdout or streaming.
+- `PostgresSink`: scan runs, resource snapshots, Helm snapshots, change events, latest hash upserts.
+- `ClickHouseSink`: analytical run, resource, Helm, and change-event facts.
+- `QdrantSink`: semantic memory point upserts with pluggable embedding function and `write_memory`.
+- `RedisSink`: latest hash keys, change stream, latest run pointer, run summary cache.
+- `StdoutSink`: fallback/local output.
+- `PgvectorSink`: placeholder still disabled behind `DisabledSink`.
 
+## Not implemented yet
+
+- LangMem sink.
+- Letta sink runtime adapter.

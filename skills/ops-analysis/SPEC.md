@@ -1,13 +1,19 @@
 # Operations Analysis Skill Specification
 
-## Role
+## Implemented status
 
-This future skill will help agents use ingested operational evidence for analysis without performing remediation.
+No operations-analysis skill runtime is implemented yet.
 
-## Responsibilities
+## Available data sources
 
-- Retrieve relevant observations.
+- PostgreSQL canonical snapshots.
+- ClickHouse analytical facts.
+- Qdrant semantic memory.
+- Redis latest hash/cache and change stream.
+
+## Responsibilities for future skill
+
+- Retrieve observations.
 - Summarize state and changes.
 - Reference run IDs and entity hashes.
 - Avoid triggering Kubernetes or Helm mutation.
-

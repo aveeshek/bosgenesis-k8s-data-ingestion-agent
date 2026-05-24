@@ -1,18 +1,16 @@
 # Fixtures Specification
 
-## Role
+## Implemented status
 
-Fixtures will hold sanitized example MCP payloads for deterministic tests.
+Test fixtures are currently inline inside unit and e2e tests.
 
-## Responsibilities
+## Current fixture coverage
 
-- Provide Kubernetes namespace summary payloads.
-- Provide pod, deployment, service, PVC, ingress, and event payloads.
-- Provide Helm release, status, history, values, and manifest payloads.
-- Include changed and unchanged comparison scenarios.
+- Kubernetes pods and deployments.
+- Empty service/statefulset/ingress/PVC/event payloads.
+- Helm release, status, history, and repo list payloads.
+- Changed and unchanged comparison scenarios.
 
-## Constraints
+## Future option
 
-- No secrets.
-- No production payloads unless sanitized.
-
+Move reusable sanitized payloads into this directory when they become large or shared across many tests.

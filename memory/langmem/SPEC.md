@@ -1,12 +1,15 @@
 # LangMem Specification
 
-## Role
+## Implemented status
 
-This directory will describe LangMem-compatible extraction and storage behavior.
+LangMem integration is not implemented yet.
 
-## Responsibilities
+## Current related behavior
 
-- Define memory extraction hooks.
-- Define high-signal summaries for future agents.
-- Avoid storing repetitive unchanged state.
+- Qdrant sink creates semantic text for changed records.
+- Repetitive unchanged records are filtered before sink routing.
 
+## Future responsibilities
+
+- Dedicated LangMem extraction hook.
+- LangMem-compatible adapter.

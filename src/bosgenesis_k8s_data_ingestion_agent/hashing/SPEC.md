@@ -1,23 +1,25 @@
 # Hashing Module Specification
 
-## Role
+## Implemented status
 
-The hashing module will compute stable content fingerprints for observations.
+The hashing module computes stable SHA-256 content hashes.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Exclude volatile fields from hash input.
-- Serialize normalized payloads deterministically.
-- Compute SHA-256 or approved equivalent content hashes.
-- Provide entity-key helpers for change detection.
+- Recursively remove volatile fields.
+- Serialize payloads deterministically with sorted keys.
+- Compute SHA-256 content hashes.
+- Apply hashes to observations with `hash_observations`.
 
-## Volatile fields to exclude
+## Volatile fields excluded
 
-- Collection timestamp.
-- Observed timestamp.
-- Run identifier.
-- Correlation identifier.
-- Noisy resource versions when configured.
-- Managed fields when present.
-- Highly volatile transition timestamps when configured.
-
+- `observed_at`
+- `collection_timestamp`
+- `run_id`
+- `correlation_id`
+- `resourceVersion`
+- `resource_version`
+- `managedFields`
+- `managed_fields`
+- `lastTransitionTime`
+- `last_transition_time`

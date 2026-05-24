@@ -1,12 +1,10 @@
 # Letta Adapter Specification
 
-## Role
+## Implemented status
 
-This directory will describe the disabled-by-default Letta adapter.
+Letta remains intentionally unimplemented and disabled.
 
-## Responsibilities
+## Boundary
 
-- Define future integration boundaries.
-- Keep adapter disabled unless explicitly configured.
-- Avoid making Letta required for normal agent execution.
-
+- Letta is not required for normal execution.
+- Future integration must remain optional and configuration-gated.

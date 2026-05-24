@@ -1,15 +1,20 @@
 # Errors Module Specification
 
-## Role
+## Implemented status
 
-The errors module will define domain-specific exceptions and failure summaries.
+The errors module defines domain-specific exception classes.
 
-## Responsibilities
+## Implemented errors
 
-- Represent MCP transport failures.
-- Represent denied tool calls.
-- Represent normalization failures.
-- Represent sink failures.
-- Represent partial scan failures.
-- Preserve enough context for traces without leaking secrets.
+- `IngestionAgentError`
+- `ConfigurationError`
+- `ToolDeniedError`
+- `McpClientError`
+- `NormalizationError`
+- `SinkWriteError`
 
+## Usage
+
+- MCP policy raises `ToolDeniedError`.
+- MCP transport wrapper raises `McpClientError`.
+- Sink router raises `SinkWriteError` in strict mode.

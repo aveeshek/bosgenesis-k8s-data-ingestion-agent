@@ -1,12 +1,18 @@
 # Session Knowledge Specification
 
-## Role
+## Implemented status
 
-This directory will store future session summaries and implementation handoff notes.
+No session summary files have been added yet.
+
+## Current validation status
+
+- Unit and in-process e2e tests pass.
+- Ruff checks pass.
+- Kubernetes YAML syntax validation passed.
+- Helm template rendering was not run locally because Helm was not installed in this environment.
 
 ## Responsibilities
 
-- Capture what changed in each development session.
+- Capture future implementation session summaries.
 - Record open questions and risks.
-- Preserve validation status.
-
+- Preserve validation status after major changes.

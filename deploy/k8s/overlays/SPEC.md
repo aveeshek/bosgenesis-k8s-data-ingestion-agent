@@ -1,13 +1,15 @@
 # Kubernetes Overlays Specification
 
-## Role
+## Implemented status
 
-Overlays will customize base manifests for local, development, staging, or production environments.
+No overlays are implemented yet.
 
-## Responsibilities
+## Current customization path
 
-- Override replica counts.
-- Override resource requests and limits.
-- Override ingress hostnames.
-- Override non-secret endpoint settings.
+- Edit raw manifests directly for immediate use.
+- Use Helm values for repeatable environment customization.
+- Use `playbook/deploy.sh` variables for image tag, target node, deploy method, and optional ingress.
 
+## Future responsibilities
+
+- Add dev/stage/prod overlays if raw-manifest deployments need environment-specific patches.

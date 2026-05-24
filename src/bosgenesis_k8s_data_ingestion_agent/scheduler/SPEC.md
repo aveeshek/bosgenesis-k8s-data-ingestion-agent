@@ -1,18 +1,19 @@
 # Scheduler Module Specification
 
-## Role
+## Implemented status
 
-The scheduler module will trigger periodic scans for the configured namespace.
+The scheduler module implements an async loop that triggers scans at a configured interval.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Support configurable scan interval.
-- Support optional run-on-startup behavior.
-- Prevent overlapping scans unless explicitly allowed.
-- Emit scheduler-level trace metadata.
+- Configurable `scan_interval_seconds`.
+- Configurable namespace.
+- Optional startup scan through `run_on_startup`.
+- Stop hook for tests and controlled shutdown logic.
+- Structured log events for scheduler ticks and startup scan.
 
 ## Constraints
 
-- The scheduler only triggers scan requests.
-- The scheduler does not collect, normalize, compare, or persist data.
-
+- Scheduler only creates scheduled/startup `ScanRequest` objects.
+- Scheduler delegates all scan work to `ScanOrchestrator`.
+- Scheduler does not collect, normalize, compare, or persist data directly.

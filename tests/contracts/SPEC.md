@@ -1,13 +1,18 @@
 # Contract Tests Specification
 
-## Role
+## Implemented status
 
-Contract tests will protect module boundaries and safety requirements.
+Contract-style assertions are currently covered by focused unit tests.
 
-## Responsibilities
+## Implemented protections
 
-- Assert Kubernetes and Helm mutation tools cannot be called.
-- Assert secret-like fields are redacted.
-- Assert scan summaries keep required IDs and counts.
-- Assert sink failure policy is respected.
+- MCP mutation tools are denied.
+- Unknown tools such as secret listing are denied.
+- Secret-like fields are redacted.
+- Scan summaries carry IDs, status, counts, and sink names.
+- Memory records preserve memory type, run context, entity identity, and metadata.
+- Sink router validates strict/non-strict behavior through sink tests.
 
+## Future option
+
+Dedicated contract test files can be split out if the public interfaces expand.

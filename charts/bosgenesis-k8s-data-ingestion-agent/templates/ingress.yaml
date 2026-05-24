@@ -1,0 +1,23 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "data-ingestion-agent.name" . }}
+  namespace: {{ include "data-ingestion-agent.namespace" . }}
+  labels:
+    {{- include "data-ingestion-agent.labels" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "data-ingestion-agent.name" . }}
+                port:
+                  name: http
+{{- end }}
+

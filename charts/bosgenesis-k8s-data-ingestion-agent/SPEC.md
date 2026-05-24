@@ -1,24 +1,24 @@
 # Agent Helm Chart Specification
 
-## Role
+## Implemented status
 
-This chart will deploy `bosgenesis-k8s-data-ingestion-agent` into the BOS Genesis namespace.
+This chart deploys `bosgenesis-k8s-data-ingestion-agent` into the BOS Genesis namespace.
 
-## Planned chart areas
+## Implemented chart areas
 
-- Chart metadata.
-- Default values.
-- Deployment template.
-- Service template.
-- ConfigMap template.
-- Secret reference template.
-- ServiceAccount and RBAC templates.
-- NetworkPolicy template.
-- Optional Ingress template.
-- Notes and validation helpers.
+- `Chart.yaml`
+- `values.yaml`
+- helper templates
+- ConfigMap template
+- optional Secret template
+- ServiceAccount template
+- Deployment template
+- Service template
+- optional Ingress template
+- NOTES template
 
 ## Constraints
 
-- Do not include executable templates until implementation is approved.
-- Keep mutating cluster-scoped resources out of chart scope.
-
+- No cluster-scoped resources.
+- No ClusterRole or ClusterRoleBinding.
+- Secret creation is optional.

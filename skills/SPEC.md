@@ -1,12 +1,16 @@
 # Skills Folder Specification
 
-## Role
+## Implemented status
 
-The `skills` folder will hold future Codex or agent skills related to this project.
+Skill documentation exists, but no runtime skill package is implemented.
+
+## Current agent surfaces
+
+- REST API for on-demand scans.
+- Scheduler for periodic scans.
+- Future optional MCP tool surface is not implemented yet.
 
 ## Responsibilities
 
-- Define how agents should invoke ingestion scans.
-- Define how agents should consume scan summaries.
 - Preserve read-only safety behavior for downstream automation.
-
+- Describe how future agents should invoke scans and consume summaries.

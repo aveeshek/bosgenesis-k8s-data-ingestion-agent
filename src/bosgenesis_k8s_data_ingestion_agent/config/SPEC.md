@@ -1,24 +1,35 @@
 # Runtime Config Module Specification
 
-## Role
+## Implemented status
 
-This module will load, validate, and expose typed runtime settings.
+The config module provides dataclass settings loaded from environment variables.
 
-## Responsibilities
+## Implemented settings
 
-- Model all settings with typed validation.
-- Merge defaults, config file values, and environment variables.
-- Mask secrets in effective config responses.
-- Validate compatible sink and memory settings.
+- `AgentSettings`
+- `ApiSettings`
+- `McpEndpointSettings`
+- `SinkSettings`
+- `ObservabilitySettings`
+- `Settings`
 
-## Required settings classes
+## Implemented environment support
 
-- Agent settings.
-- API settings.
-- Scheduler settings.
-- MCP settings.
-- Sink settings.
-- Memory settings.
-- Observability settings.
-- Security settings.
+- Agent namespace, startup scan, scan interval, strict sink mode.
+- API host and port.
+- K8s and Helm MCP endpoint URLs, timeouts, and retries.
+- PostgreSQL DSN.
+- ClickHouse host, port, user, password, and database.
+- Qdrant URL, API key, collection, and vector size.
+- Redis host, port, DB, password, and key prefix.
+- stdout sink enablement.
+- log level and service name.
 
+## Secret handling
+
+`effective_safe_dict()` redacts:
+
+- `postgres_dsn`
+- `clickhouse_password`
+- `qdrant_api_key`
+- `redis_password`

@@ -1,12 +1,18 @@
 # Memory Folder Specification
 
-## Role
+## Implemented status
 
-The root `memory` folder will hold project-level memory strategy and persisted planning notes.
+A thin agentic memory abstraction is implemented in the runtime package.
 
-## Responsibilities
+## Implemented memory behavior
 
-- Describe which operational observations are worth saving as memory.
-- Define retrieval metadata requirements.
-- Keep noisy raw records out of long-term memory by default.
+- `MemoryRecordBuilder` creates session, episodic, and semantic records.
+- `MemoryRouter` routes memory records to memory-capable sinks.
+- `QdrantSink.write_memory()` persists memory records as semantic points.
+- Embedding is pluggable; zero vectors are used when no embedder is configured.
 
+## Future work
+
+- pgvector runtime sink.
+- LangMem adapter.
+- Letta adapter.

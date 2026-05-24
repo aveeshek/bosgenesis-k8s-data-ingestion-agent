@@ -1,14 +1,23 @@
 # Helm Values Specification
 
-## Role
+## Implemented status
 
-This directory will define the values organization for the Helm chart.
+Helm values are implemented in `values.yaml`.
 
-## Responsibilities
+## Implemented value groups
 
-- Separate common defaults from environment-specific values.
-- Model sink enablement.
-- Model MCP endpoint configuration.
-- Model observability options.
-- Model resource limits and probes.
+- replica count
+- image repository, tag, pull policy
+- runtime mode
+- namespace override
+- service account
+- non-secret config
+- optional secret values
+- service
+- ingress
+- resources
+- pod security context
 
+## Default runtime
+
+The default chart runs `runtimeMode: service`, which starts API and scheduler together.

@@ -1,12 +1,12 @@
 # Codex Prompts Specification
 
-## Role
+## Implemented status
 
-This directory will contain reusable prompts for future implementation, testing, design review, and release work.
+No reusable prompt files are implemented yet.
 
-## Responsibilities
+## Current guidance
 
-- Preserve the no-mutation safety stance in implementation prompts.
-- Ask future agents to validate MCP allowlists and denylists.
-- Encourage module-by-module implementation rather than broad rewrites.
-
+- Preserve the no-mutation safety stance.
+- Validate MCP allowlists and denylists after MCP changes.
+- Run unit and e2e tests after implementation changes.
+- Keep live e2e opt-in.

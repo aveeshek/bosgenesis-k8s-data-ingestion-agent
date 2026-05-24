@@ -1,0 +1,18 @@
+"""Kubernetes Inspector MCP client."""
+
+from __future__ import annotations
+
+from bosgenesis_k8s_data_ingestion_agent.mcp_clients.base import BaseMcpClient, McpTransport
+from bosgenesis_k8s_data_ingestion_agent.mcp_clients.policy import K8S_READ_TOOLS, McpToolPolicy
+from bosgenesis_k8s_data_ingestion_agent.observability import get_logger
+
+
+class K8sInspectorClient(BaseMcpClient):
+    def __init__(self, endpoint_url: str, transport: McpTransport):
+        super().__init__(
+            endpoint_url=endpoint_url,
+            policy=McpToolPolicy(K8S_READ_TOOLS),
+            transport=transport,
+            logger=get_logger(__name__),
+        )
+

@@ -1,13 +1,16 @@
 # Kubernetes Base Specification
 
-## Role
+## Implemented status
 
-Base manifests will define common deployment resources shared by all environments.
+The current implementation uses flat manifests in `deploy/k8s` instead of a `base` directory.
 
-## Responsibilities
+## Current base resources
 
-- Define common labels and selectors.
-- Define service and deployment shape.
-- Define baseline security context.
-- Define non-secret config references.
+- Common labels and selectors are in each manifest.
+- Deployment security context runs as non-root UID `10001`.
+- ConfigMap holds non-secret runtime settings.
+- Secret example documents required secret variables.
 
+## Future option
+
+This directory can become a kustomize base if environment overlays are added later.

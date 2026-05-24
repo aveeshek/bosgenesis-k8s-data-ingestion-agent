@@ -1,18 +1,29 @@
 # Deployment Specification
 
-## Role
+## Implemented status
 
-The `deploy` directory will hold Kubernetes deployment specifications once implementation begins.
+The `deploy` directory now contains raw Kubernetes deployment assets.
 
-## Responsibilities
+## Implemented resources
 
-- Define namespace-scoped deployment resources.
-- Keep runtime configuration externalized.
-- Use least-privilege service account and RBAC.
-- Support optional ingress.
-- Support network policies for MCP and sink connectivity.
+- Namespace.
+- ServiceAccount.
+- ConfigMap.
+- Secret example.
+- Deployment.
+- Service.
+- Optional Ingress.
+- Kustomization.
 
-## No-code constraint
+## Defaults
 
-No Kubernetes YAML is included in the initial scaffold.
+- Namespace: `bosgenesis`.
+- Runtime mode: `service`.
+- Scan interval: `3600` seconds.
+- API port: `8080`.
+- Image: `bosgenesis-k8s-data-ingestion-agent:0.0.1`.
 
+## Not implemented yet
+
+- NetworkPolicy.
+- Role/RoleBinding; the agent calls MCP services and does not directly call Kubernetes API.

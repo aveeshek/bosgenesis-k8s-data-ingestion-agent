@@ -1,20 +1,18 @@
 # Codex Folder Specification
 
-## Role
+## Implemented status
 
-The `codex` folder will hold Codex-specific working context, environment setup notes, local prompts, and coding guardrails for this repository.
+The `codex` folder currently contains workflow specs for future Codex sessions.
+
+## Current repository state for Codex
+
+- Python package implementation exists.
+- Deployment assets exist.
+- Unit and in-process e2e tests exist.
+- Initial scaffold tag `initial-specs` points at the initial spec-only commit.
 
 ## Responsibilities
 
 - Capture repository-specific instructions for future Codex sessions.
-- Document local development setup expectations without embedding secrets.
-- Record prompt patterns for design review, implementation planning, and test generation.
+- Preserve coding guardrails.
 - Keep Codex workflow material separate from product code.
-
-## Future contents
-
-- Local config examples after approval.
-- Implementation checklist prompts.
-- Review prompts for read-only MCP safety.
-- Release and PR preparation prompts.
-

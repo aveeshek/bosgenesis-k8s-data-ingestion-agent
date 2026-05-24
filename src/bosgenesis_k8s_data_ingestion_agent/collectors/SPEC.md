@@ -1,27 +1,41 @@
 # Collectors Module Specification
 
-## Role
+## Implemented status
 
-Collectors will gather raw Kubernetes and Helm bundles through MCP clients.
+Collectors gather raw Kubernetes and Helm bundles through allowlisted MCP clients.
 
-## Responsibilities
+## Implemented collectors
 
-- Collect namespace summaries and resource lists.
-- Collect Helm release status, history, values, and manifests according to request options.
-- Collect pod logs only when enabled and bounded.
-- Preserve raw payloads for downstream normalization.
+- `KubernetesCollector`
+- `HelmCollector`
 
-## Collector types
+## Kubernetes collection
 
-- Namespace collector.
-- Workload collector.
-- Event collector.
-- Log collector.
-- Helm release collector.
+Collects:
+
+- namespace summary
+- pods
+- deployments
+- statefulsets
+- services
+- ingresses
+- PVCs
+- events
+- optional bounded pod logs when `include_logs=true`
+
+## Helm collection
+
+Collects:
+
+- release list
+- release status
+- release history
+- optional values when `include_values=true`
+- optional manifest when `include_manifests=true`
+- repository list
 
 ## Constraints
 
-- Collectors must not persist data.
-- Collectors must not compute final content hashes.
-- Collectors must not call non-allowlisted MCP tools.
-
+- Collectors do not persist data.
+- Collectors do not compute hashes.
+- Collectors can only call tools accepted by MCP client policy.

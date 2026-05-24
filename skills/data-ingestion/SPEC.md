@@ -1,13 +1,20 @@
 # Data Ingestion Skill Specification
 
-## Role
+## Implemented status
 
-This future skill will help agents request namespace scans and interpret returned summaries.
+No skill runtime is implemented yet.
 
-## Responsibilities
+## Available invocation path
 
-- Call the on-demand scan endpoint or optional MCP tool.
+Agents can call:
+
+```text
+POST /scan/run
+```
+
+## Responsibilities for future skill
+
+- Call the on-demand scan endpoint.
 - Request bounded logs only when needed.
-- Prefer summaries for routine workflows.
-- Preserve correlation IDs for traceability.
-
+- Preserve run and correlation IDs.
+- Avoid requesting Kubernetes or Helm mutation.

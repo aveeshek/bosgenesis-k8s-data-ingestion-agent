@@ -1,13 +1,15 @@
 # pgvector Memory Specification
 
-## Role
+## Implemented status
 
-This directory will define pgvector memory storage behavior.
+pgvector runtime writes are not implemented yet.
 
-## Responsibilities
+## Implemented asset
 
-- Define table intent.
-- Define vector dimensions as configurable.
-- Define metadata fields for retrieval.
-- Coordinate with PostgreSQL sink configuration.
+- Optional table bootstrap: `sinks/postgresql/init_pgvector.sql`.
 
+## Future responsibilities
+
+- Runtime writer.
+- Configurable embedding dimension.
+- Metadata-based retrieval support.

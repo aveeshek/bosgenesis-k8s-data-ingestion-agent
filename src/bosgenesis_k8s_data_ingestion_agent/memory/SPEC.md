@@ -1,18 +1,26 @@
 # Memory Module Specification
 
-## Role
+## Implemented status
 
-The memory module will define extraction and routing rules for operational observations that should become future agent memory.
+The memory module now provides a thin agentic memory abstraction.
 
-## Responsibilities
+## Implemented components
 
-- Select high-signal records for memory.
-- Avoid noisy repeated facts.
-- Generate metadata for retrieval.
-- Route memory candidates to Qdrant, pgvector, or LangMem-compatible adapters.
+- `MemoryType`
+- `MemoryRecord`
+- `MemoryRecordBuilder`
+- `MemoryRouter`
 
-## Constraints
+## Current behavior
 
-- Memory writing is optional.
-- Letta adapter remains disabled by default.
+- Session memory records summarize scan runs.
+- Episodic memory records summarize observed change events.
+- Semantic memory records summarize compact operational facts.
+- Memory routing targets sinks that implement `write_memory`.
+- Qdrant supports `write_memory`.
 
+## Not implemented yet
+
+- LangMem adapter.
+- Letta adapter.
+- pgvector runtime writer.

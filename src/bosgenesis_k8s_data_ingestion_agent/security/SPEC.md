@@ -1,20 +1,21 @@
 # Security Module Specification
 
-## Role
+## Implemented status
 
-The security module will define runtime protections for read-only behavior and sensitive-data handling.
+The security module implements payload redaction and namespace validation helpers.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Enforce MCP tool allowlists and denylists.
-- Redact sensitive fields before sink writes and API responses.
-- Validate namespace scope.
-- Provide API authentication and authorization hooks if required.
+- Recursively redact secret-like keys.
+- Validate namespace against an allowed namespace.
+
+## Read-only enforcement
+
+MCP tool allowlists and mutation denylists are implemented in `mcp_clients.policy`.
 
 ## Denied behavior
 
 - Kubernetes mutation.
 - Helm mutation.
-- Secret collection.
-- Cross-namespace scanning unless explicitly configured in a future approved design.
-
+- secret collection.
+- cross-namespace scanning unless a future approved design explicitly changes scope.

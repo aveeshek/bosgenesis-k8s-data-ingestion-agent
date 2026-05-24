@@ -1,13 +1,15 @@
 # Stdout and Streaming Sink Specification
 
-## Role
+## Implemented status
 
-The stdout or streaming sink will emit scan results when persistence is disabled or when requested by the caller.
+`StdoutSink` stores JSON lines in-memory for tests and local fallback behavior.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Return or print normalized observations safely.
-- Redact configured sensitive fields.
-- Preserve run summary metadata.
-- Support on-demand callers that need immediate data.
+- Emit changed records as compact JSON lines.
+- Include run ID, correlation ID, namespace, source, entity, change type, and content hash.
+- Return `SinkResult`.
 
+## Current limitation
+
+- It does not currently print directly to process stdout; it keeps emitted lines on the sink instance.

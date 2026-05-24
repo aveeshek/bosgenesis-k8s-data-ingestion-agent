@@ -1,27 +1,32 @@
 # Configuration Module Specification
 
-## Role
+## Implemented status
 
-The `config` directory will define the future non-secret configuration layout for the agent.
+Runtime configuration is implemented in `src/bosgenesis_k8s_data_ingestion_agent/config`.
 
-## Responsibilities
+## Current configuration source
 
-- Specify default settings for agent runtime, API, scheduler, MCP clients, sinks, memory, and observability.
-- Separate non-secret settings from secret references.
-- Define configuration precedence: defaults, settings file, environment variables.
-- Support enabling or disabling every external sink independently.
+- Built-in defaults.
+- Environment variables.
 
-## Key settings groups
+## Implemented settings groups
 
-- Agent runtime settings.
-- REST API settings.
-- Scheduler settings.
-- Kubernetes Inspector MCP settings.
-- Helm Manager MCP settings.
-- PostgreSQL and pgvector settings.
-- ClickHouse settings.
-- Qdrant settings.
-- Redis settings.
-- LangMem and Letta settings.
-- Langfuse and SigNoz OpenTelemetry settings.
+- Agent runtime and scheduler.
+- REST API.
+- Kubernetes Inspector MCP.
+- Helm Manager MCP.
+- PostgreSQL.
+- ClickHouse.
+- Qdrant.
+- Redis.
+- stdout sink.
+- structured logging and service name.
 
+## Secret handling
+
+Secrets are loaded from environment variables and redacted from effective config output.
+
+## Not implemented yet
+
+- YAML/TOML config file loading.
+- Langfuse/SigNoz runtime exporters.

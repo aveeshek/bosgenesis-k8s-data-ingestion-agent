@@ -1,19 +1,24 @@
 # PostgreSQL Sink Specification
 
-## Role
+## Implemented status
 
-The PostgreSQL sink will store canonical run and snapshot records for future ML and audit analysis.
+`PostgresSink` writes durable canonical scan data to the `k8s_ingestion` schema.
 
-## Responsibilities
+## Implemented writes
 
-- Store scan runs.
-- Store Kubernetes resource snapshots.
-- Store Helm release snapshots.
-- Store change events.
-- Support latest-hash lookup for change detection.
+- `scan_runs`
+- `resource_snapshots`
+- `helm_release_snapshots`
+- `change_events`
+- `latest_entity_hashes`
+
+## Configuration
+
+- `POSTGRES_ENABLED`
+- `POSTGRES_DSN`
 
 ## Constraints
 
-- Store only changed snapshots unless full-history mode is enabled.
-- Avoid storing secrets or unredacted secret-like values.
-
+- The orchestrator passes only changed records to sinks.
+- Payload redaction happens before observations reach sinks.
+- Latest-hash lookup is not yet backed by PostgreSQL; current change detector uses a pluggable hash state store.

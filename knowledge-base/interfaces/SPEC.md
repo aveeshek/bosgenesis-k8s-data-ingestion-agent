@@ -1,14 +1,18 @@
 # Interface Knowledge Specification
 
-## Role
+## Implemented status
 
-This directory will document external and internal interfaces.
+Interfaces are implemented across API, MCP clients, sinks, and memory routing.
 
-## Responsibilities
+## Implemented interfaces
 
-- Document Kubernetes Inspector MCP read tools.
-- Document Helm Manager MCP read tools.
-- Document REST endpoints.
-- Document optional MCP tool surface.
-- Document sink adapter interfaces.
+- REST endpoints: `/health`, `/scan/run`, `/scan/latest`, `/config/effective`.
+- Kubernetes MCP read allowlist.
+- Helm MCP read allowlist.
+- Sink protocol: async `write(run_context, records, summary)`.
+- Memory sink protocol: async `write_memory(run_context, memory_records)`.
+- Runtime CLI modes: `api`, `scheduler`, `service`.
 
+## Not implemented yet
+
+- Optional MCP tool surface for this agent.

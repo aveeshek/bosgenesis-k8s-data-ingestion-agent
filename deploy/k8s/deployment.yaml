@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bosgenesis-k8s-data-ingestion-agent
+  namespace: bosgenesis
+  labels:
+    app.kubernetes.io/name: bosgenesis-k8s-data-ingestion-agent
+    app.kubernetes.io/part-of: bosgenesis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bosgenesis-k8s-data-ingestion-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bosgenesis-k8s-data-ingestion-agent
+        app.kubernetes.io/part-of: bosgenesis
+    spec:
+      serviceAccountName: bosgenesis-k8s-data-ingestion-agent
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: app
+          image: bosgenesis-k8s-data-ingestion-agent:0.0.1
+          imagePullPolicy: IfNotPresent
+          args: ["service"]
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: bosgenesis-k8s-data-ingestion-agent-config
+            - secretRef:
+                name: bosgenesis-k8s-data-ingestion-agent-secret
+                optional: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+

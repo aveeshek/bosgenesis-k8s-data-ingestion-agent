@@ -1,17 +1,17 @@
 # Playbook Folder Specification
 
-## Role
+## Implemented status
 
-The `playbook` folder will hold operator workflows for deploying, validating, and troubleshooting the agent.
+The playbook folder now contains deployment automation and operator documentation.
+
+## Implemented assets
+
+- `deploy.sh`: build, save, transfer, containerd import, apply/helm deploy, rollout status.
+- `deployment/DEPLOYMENT.md`: deployment and verification guide.
 
 ## Responsibilities
 
-- Describe deployment checklist.
-- Describe validation checklist.
-- Describe rollback approach.
-- Describe operational troubleshooting flow.
-
-## Constraint
-
-No executable scripts are included in the initial scaffold.
-
+- Deploy through the cluster containerd import workflow.
+- Support raw kustomize manifests or Helm deployment.
+- Support optional ingress.
+- Document API health and on-demand scan checks.

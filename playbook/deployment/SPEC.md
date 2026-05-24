@@ -1,14 +1,17 @@
 # Deployment Playbook Specification
 
-## Role
+## Implemented status
 
-This directory will document deployment steps for Kubernetes and Helm once manifests exist.
+This directory contains a concrete deployment guide.
 
-## Responsibilities
+## Implemented guide coverage
 
-- Confirm namespace.
-- Confirm MCP endpoints.
-- Confirm sink endpoint reachability.
-- Confirm service account and RBAC scope.
-- Confirm observability endpoints.
-
+- Docker build.
+- Docker save.
+- SCP tar to cluster node.
+- containerd image import with `ctr`.
+- Raw manifest deployment through `kubectl apply -k`.
+- Helm deployment through `helm upgrade --install`.
+- Optional ingress.
+- Rollout and service verification.
+- API health and on-demand scan checks.

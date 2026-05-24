@@ -1,21 +1,21 @@
 # Change Detection Module Specification
 
-## Role
+## Implemented status
 
-Change detection will compare current observation hashes against latest known state.
+Change detection compares current observation hashes against a pluggable latest-hash store.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Determine changed, unchanged, new, and removed entities.
-- Prefer Redis latest-state cache when enabled.
-- Fall back to PostgreSQL latest hash lookup when enabled.
-- Treat all observations as output records when no comparison store exists.
-- Respect full-history mode when configured.
+- Detect `new`, `changed`, and `unchanged`.
+- Update latest hash state for new and changed records.
+- Support full-history mode.
+- Provide `InMemoryHashStateStore` for tests and local runs.
+
+## Current limitations
+
+- Deleted or missing resource candidate detection is not implemented yet.
+- Redis/PostgreSQL-backed hash state lookup can be added behind the `HashStateStore` protocol.
 
 ## Outputs
 
-- Changed record set.
-- Unchanged count.
-- Entity lifecycle events.
-- Change reason metadata when inferable.
-
+- `ChangeRecord` with observation, change type, and previous hash.

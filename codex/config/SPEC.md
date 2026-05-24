@@ -1,18 +1,19 @@
 # Codex Config Specification
 
-## Role
+## Implemented status
 
-This directory will describe Codex-local configuration for working with the project.
+No Codex-local config files are implemented yet.
 
-## Responsibilities
+## Current validation commands
 
-- Define expected local paths and non-secret defaults.
-- Document how local Codex tasks should start tests, formatters, and validation.
-- Keep machine-specific values out of committed runtime code.
+```bash
+python -m pytest
+python -m ruff check .
+python -m pytest tests/e2e
+```
 
 ## Constraints
 
 - Do not store credentials.
 - Do not store Kubernetes tokens.
-- Do not store production endpoints unless already public and non-sensitive.
-
+- Do not store secret sink DSNs or passwords.

@@ -1,13 +1,15 @@
 # Knowledge Base Specification
 
-## Role
+## Implemented status
 
-The `knowledge-base` folder will preserve design decisions, imported source specifications, architecture notes, and schema planning.
+The knowledge base currently holds design, schema, interface, decision, and session-spec folders.
+
+## Current source of truth
+
+Implementation details now live in code and updated module `SPEC.md` files.
 
 ## Responsibilities
 
-- Capture context from the analytical MoP agent specification documents.
-- Record architecture decisions and rationale.
-- Maintain data model and interface contracts.
-- Store future session summaries.
-
+- Preserve high-level context and decisions.
+- Point future work toward current implemented module contracts.
+- Track future session summaries and architecture changes.

@@ -1,12 +1,15 @@
 # Design Knowledge Specification
 
-## Role
+## Implemented status
 
-This directory will hold high-level and low-level design material.
+The implemented design now includes runtime modes, API, scheduler, orchestrator, collectors, normalizers, hashing, change detection, sink adapters, thin memory abstraction, deployment, and tests.
 
-## Responsibilities
+## Current module boundaries
 
-- Track invocation, orchestration, collection, normalization, change detection, and sink design.
-- Preserve diagrams and data-flow notes.
-- Record approved module boundaries.
-
+- API invokes orchestrator.
+- Scheduler invokes orchestrator.
+- Orchestrator coordinates collectors, normalization, hashing, change detection, sinks, and optional memory routing.
+- MCP clients enforce read-only policy.
+- Sinks own persistence/output behavior.
+- Memory builder creates session, episodic, and semantic records.
+- Memory router sends records to memory-capable sinks such as Qdrant.

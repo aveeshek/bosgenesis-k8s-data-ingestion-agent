@@ -1,23 +1,23 @@
 # Models Module Specification
 
-## Role
+## Implemented status
 
-Models will define typed contracts shared across modules.
+Models are implemented as dataclasses and enums shared across the package.
 
-## Model groups
+## Implemented models
 
-- Scan request.
-- Run context.
-- Raw collection bundle.
-- Canonical observation.
-- Hashed observation.
-- Change record.
-- Sink result.
-- Run summary.
-- Error summary.
+- `ScanStatus`
+- `ChangeType`
+- `ScanRequest`
+- `RunContext`
+- `RawBundle`
+- `Observation`
+- `ChangeRecord`
+- `SinkResult`
+- `ScanSummary`
 
 ## Constraints
 
-- Models should avoid dependency on concrete external clients.
-- Models should separate raw payloads from normalized payloads.
-
+- Models have no dependency on concrete external clients.
+- `Observation` separates raw payload, normalized payload, hash input, and content hash.
+- `Observation.entity_key` provides stable identity for sinks and change detection.

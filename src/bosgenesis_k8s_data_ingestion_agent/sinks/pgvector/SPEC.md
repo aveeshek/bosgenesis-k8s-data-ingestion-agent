@@ -1,17 +1,15 @@
 # pgvector Sink Specification
 
-## Role
+## Implemented status
 
-The pgvector sink will store vector memory records in PostgreSQL when enabled.
+The pgvector sink remains a disabled placeholder.
 
-## Responsibilities
+## Available assets
 
-- Share connection configuration with PostgreSQL where appropriate.
+- Optional schema bootstrap exists in `sinks/postgresql/init_pgvector.sql`.
+
+## Future responsibilities
+
+- Share PostgreSQL connection configuration where appropriate.
 - Store embedding vectors and metadata.
 - Support future semantic retrieval workflows.
-
-## Constraints
-
-- Do not require pgvector when PostgreSQL snapshot storage is enabled.
-- Keep vector writes optional.
-

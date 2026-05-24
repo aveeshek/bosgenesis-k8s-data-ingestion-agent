@@ -1,0 +1,72 @@
+replicaCount: 1
+
+image:
+  repository: bosgenesis-k8s-data-ingestion-agent
+  tag: "0.0.1"
+  pullPolicy: IfNotPresent
+
+runtimeMode: service
+
+namespaceOverride: bosgenesis
+
+serviceAccount:
+  create: true
+  name: bosgenesis-k8s-data-ingestion-agent
+
+config:
+  agentNamespace: bosgenesis
+  scanIntervalSeconds: "3600"
+  runOnStartup: "true"
+  strictSinks: "false"
+  apiHost: "0.0.0.0"
+  apiPort: "8080"
+  k8sMcpUrl: "http://bosgenesis-k8s-inspector-mcp.bosgenesis.svc.cluster.local:8080/mcp"
+  helmMcpUrl: "http://bosgenesis-helm-manager-mcp.bosgenesis.svc.cluster.local:8080/mcp"
+  postgresEnabled: "true"
+  clickhouseEnabled: "true"
+  clickhouseHost: "clickhouse.bosgenesis.svc.cluster.local"
+  clickhousePort: "8123"
+  clickhouseUser: "bosgenesis"
+  clickhouseDatabase: "bosgenesis_k8s_ingestion"
+  qdrantEnabled: "true"
+  qdrantUrl: "http://qdrant.bosgenesis.svc.cluster.local:6333"
+  qdrantCollection: "bosgenesis_k8s_observations"
+  qdrantVectorSize: "1536"
+  redisEnabled: "true"
+  redisHost: "redis-master.bosgenesis.svc.cluster.local"
+  redisPort: "6379"
+  redisDb: "0"
+  redisKeyPrefix: "bg:k8s-ingestion"
+  stdoutEnabled: "false"
+  logLevel: INFO
+
+secret:
+  create: false
+  name: bosgenesis-k8s-data-ingestion-agent-secret
+  postgresDsn: ""
+  clickhousePassword: ""
+  qdrantApiKey: ""
+  redisPassword: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: nginx
+  host: data-ingestion-agent.bosgenesis.local
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  fsGroup: 10001
+

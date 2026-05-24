@@ -1,13 +1,18 @@
 # Redis Memory Specification
 
-## Role
+## Implemented status
 
-This directory will define Redis cache and short-term memory behavior.
+Redis runtime writes are implemented through `RedisSink`.
 
-## Responsibilities
+## Implemented behavior
 
-- Store latest hashes.
-- Store latest run summaries.
-- Support TTL-based cleanup.
-- Avoid treating Redis as long-term history.
+- latest hash keys
+- change stream events
+- latest run pointer
+- TTL-based run summary cache
 
+## Bootstrap assets
+
+- `sinks/redis/keyspace.md`
+- `sinks/redis/init_keyspace.sh`
+- `sinks/redis/init_keyspace.py`

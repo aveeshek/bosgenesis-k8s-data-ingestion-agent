@@ -1,24 +1,32 @@
 # Kubernetes Manifests Specification
 
-## Role
+## Implemented status
 
-This directory will contain raw Kubernetes manifests or kustomize overlays after the design is approved.
+This directory contains raw Kubernetes manifests and a kustomization.
 
-## Planned resource specs
+## Implemented resource specs
 
-- Deployment.
-- Service.
-- ConfigMap.
-- Secret example or secret reference.
-- ServiceAccount.
-- Role.
-- RoleBinding.
-- NetworkPolicy.
-- Optional Ingress.
+- `namespace.yaml`
+- `serviceaccount.yaml`
+- `configmap.yaml`
+- `secret.example.yaml`
+- `deployment.yaml`
+- `service.yaml`
+- `ingress.yaml`
+- `kustomization.yaml`
+
+## Runtime behavior
+
+The Deployment starts:
+
+```text
+bosgenesis-k8s-data-ingestion-agent service
+```
+
+This enables the API and hourly scheduler together.
 
 ## Constraints
 
-- Namespace-scoped only.
+- Namespace-scoped deployment.
 - No ClusterRole or ClusterRoleBinding.
-- No direct access to Kubernetes Secrets from the agent.
-
+- Secret values are referenced through Kubernetes Secret env vars.

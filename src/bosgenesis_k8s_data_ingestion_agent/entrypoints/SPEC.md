@@ -1,21 +1,25 @@
 # Entrypoints Module Specification
 
-## Role
+## Implemented status
 
-Entrypoints will start the agent in service mode, API-only mode, scheduler-only mode, or future MCP-tool mode.
+Entrypoints now start the agent in three runtime modes:
 
-## Responsibilities
+- `api`: FastAPI only.
+- `scheduler`: periodic scanner only.
+- `service`: FastAPI and scheduler together.
 
-- Load effective configuration.
-- Initialize observability.
-- Initialize sink registry.
-- Start REST API when enabled.
-- Start periodic scheduler when enabled.
-- Optionally run one startup scan.
+## Implemented responsibilities
+
+- Parse CLI runtime mode.
+- Load settings from environment variables.
+- Configure structured JSON logging.
+- Build the scan orchestrator and enabled sinks.
+- Start Uvicorn for API mode.
+- Start the scheduler loop for scheduler mode.
+- Start API and scheduler concurrently for service mode.
 
 ## Non-responsibilities
 
-- Do not contain scan business logic.
-- Do not call MCP tools directly.
-- Do not write persistence records directly.
-
+- Entrypoints do not contain scan business logic.
+- Entrypoints do not call MCP tools directly.
+- Entrypoints only construct sink adapters; sink writes remain inside the sink layer.

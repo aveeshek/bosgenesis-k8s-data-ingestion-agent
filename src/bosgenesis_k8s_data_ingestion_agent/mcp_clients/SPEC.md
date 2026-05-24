@@ -1,16 +1,18 @@
 # MCP Clients Module Specification
 
-## Role
+## Implemented status
 
-MCP clients will wrap remote calls to BOS Genesis Kubernetes Inspector MCP and Helm Manager MCP.
+MCP clients wrap Kubernetes Inspector and Helm Manager calls through an injectable transport.
 
-## Responsibilities
+## Implemented responsibilities
 
-- Maintain explicit read-tool allowlists.
-- Maintain explicit mutation-tool denylists.
-- Apply timeouts and retry policy.
-- Attach run and trace metadata to calls.
-- Normalize transport errors into domain errors.
+- Explicit read-tool allowlists.
+- Explicit mutation-tool denylist.
+- `McpToolPolicy.assert_allowed()` enforcement before transport calls.
+- Run-context argument enrichment with namespace and correlation ID.
+- Structured logs around MCP call start/success/failure.
+- `InMemoryMcpTransport` for unit and in-process e2e tests.
+- Transport errors normalized into `McpClientError`.
 
 ## Kubernetes read allowlist
 
@@ -36,4 +38,3 @@ MCP clients will wrap remote calls to BOS Genesis Kubernetes Inspector MCP and H
 - `helm_show_chart`
 - `helm_template_chart`
 - `helm_repo_list`
-

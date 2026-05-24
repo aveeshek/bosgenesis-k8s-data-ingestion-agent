@@ -1,18 +1,25 @@
 # ClickHouse Sink Specification
 
-## Role
+## Implemented status
 
-The ClickHouse sink will store lightweight analytical facts and time-series events.
+`ClickHouseSink` writes dashboard-oriented analytical facts.
 
-## Responsibilities
+## Implemented writes
 
-- Write run summary facts.
-- Write resource status facts.
-- Write Helm release facts.
-- Write change-event facts.
-- Support dashboard-friendly query patterns.
+- `scan_run_facts`
+- `resource_status_facts`
+- `helm_release_facts`
+- `change_event_facts`
+
+## Configuration
+
+- `CLICKHOUSE_ENABLED`
+- `CLICKHOUSE_HOST`
+- `CLICKHOUSE_PORT`
+- `CLICKHOUSE_USER`
+- `CLICKHOUSE_PASSWORD`
+- `CLICKHOUSE_DATABASE`
 
 ## Failure policy
 
-ClickHouse write failures should not fail the whole scan unless strict mode is enabled.
-
+Failures are handled by `SinkRouter`; strict mode raises, non-strict mode records failed sink result.

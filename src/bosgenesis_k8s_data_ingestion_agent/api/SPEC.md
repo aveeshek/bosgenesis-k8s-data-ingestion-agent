@@ -1,10 +1,10 @@
 # API Module Specification
 
-## Role
+## Implemented status
 
-The API module will expose HTTP endpoints for health, scan triggering, latest summary, and effective non-secret configuration.
+The API module exposes a FastAPI application through `create_app(settings, orchestrator)`.
 
-## Planned endpoints
+## Implemented endpoints
 
 - `GET /health`
 - `POST /scan/run`
@@ -13,14 +13,13 @@ The API module will expose HTTP endpoints for health, scan triggering, latest su
 
 ## Responsibilities
 
-- Validate request payloads.
-- Create invocation metadata for manual or agent-triggered scans.
-- Delegate scan execution to the orchestrator.
-- Return run summaries and optional streamed output.
+- Convert request payloads into `ScanRequest`.
+- Delegate scan execution to `ScanOrchestrator`.
+- Store the latest in-memory scan summary for `GET /scan/latest`.
+- Return safe effective config with sink secrets redacted.
 
 ## Constraints
 
-- Do not expose secrets.
-- Do not bypass orchestrator lifecycle.
-- Do not trigger Kubernetes or Helm mutation.
-
+- API does not call MCP tools directly.
+- API does not write sinks directly.
+- API does not expose secret values.

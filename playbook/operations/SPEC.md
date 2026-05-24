@@ -1,14 +1,19 @@
 # Operations Playbook Specification
 
-## Role
+## Implemented status
 
-This directory will document normal operating procedures.
+Operational controls are available through environment variables and API endpoints.
 
-## Responsibilities
+## Implemented operations
 
-- Inspect latest scan status.
-- Tune scan interval.
-- Enable or disable sinks.
-- Investigate partial sink failures.
-- Bound optional log collection.
+- Inspect health through `/health`.
+- Trigger scans through `/scan/run`.
+- Inspect latest scan through `/scan/latest`.
+- Tune scan interval with `AGENT_SCAN_INTERVAL_SECONDS`.
+- Enable/disable sinks with sink-specific env vars.
+- Use structured JSON logs for scan, MCP, scheduler, and sink lifecycle events.
 
+## Future operations docs
+
+- Sink-specific troubleshooting.
+- Langfuse/SigNoz trace checks after observability exporters are implemented.
