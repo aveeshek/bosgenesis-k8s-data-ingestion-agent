@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from fastapi.routing import Mount
 
 from bosgenesis_k8s_data_ingestion_agent.api import create_app
 from bosgenesis_k8s_data_ingestion_agent.change_detection import ChangeDetector, InMemoryHashStateStore
@@ -154,4 +155,37 @@ def test_health_endpoint_exposes_safe_effective_config():
     assert payload["status"] == "ok"
     assert payload["namespace"] == "bosgenesis"
     assert "components" in payload
+    assert payload["mcp_endpoint"] == "/mcp"
 
+
+def test_streamable_http_mcp_mount_exists():
+    client, _, _, _ = build_e2e_client()
+
+    assert any(isinstance(route, Mount) and route.path == "" for route in client.app.routes)
+
+
+def test_mcp_initialize_accepts_ingress_host_header():
+    client, _, _, _ = build_e2e_client()
+    payload = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "test-client", "version": "0.1.0"},
+        },
+    }
+
+    with client:
+        response = client.post(
+            "/mcp",
+            json=payload,
+            headers={
+                "Accept": "application/json, text/event-stream",
+                "Host": "data-ingestion-agent.bosgenesis.local",
+            },
+        )
+
+    assert response.status_code == 200
+    assert "bosgenesis-k8s-data-ingestion-agent" in response.text

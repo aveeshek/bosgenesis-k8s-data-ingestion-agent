@@ -54,3 +54,23 @@ async def _test_helm_collector_collects_release_details():
 
     assert bundle.source == "helm_mcp"
     assert bundle.payload["releases"][0]["status"]["status"] == "deployed"
+
+
+def test_helm_collector_accepts_live_manager_output_shape():
+    asyncio.run(_test_helm_collector_accepts_live_manager_output_shape())
+
+
+async def _test_helm_collector_accepts_live_manager_output_shape():
+    transport = InMemoryMcpTransport(
+        responses={
+            "helm_list_releases": {"status": "ok", "output": [{"name": "clickhouse"}]},
+            "helm_release_status": {"status": "deployed"},
+            "helm_release_history": [{"revision": 1}],
+            "helm_repo_list": [],
+        }
+    )
+    collector = HelmCollector(HelmManagerClient("http://helm/mcp", transport))
+
+    bundle = await collector.collect(ScanRequest(), RunContext())
+
+    assert bundle.payload["releases"][0]["release"]["name"] == "clickhouse"

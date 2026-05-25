@@ -15,6 +15,27 @@ def test_settings_from_env(monkeypatch):
     assert settings.sinks.redis_enabled is True
 
 
+def test_mcp_allowed_hosts_from_env(monkeypatch):
+    monkeypatch.setenv("MCP_ALLOWED_HOSTS", "data-ingestion-agent.bosgenesis.local,localhost")
+
+    settings = Settings.from_env()
+
+    assert settings.api.mcp_allowed_hosts == (
+        "data-ingestion-agent.bosgenesis.local",
+        "localhost",
+    )
+
+
+def test_mcp_host_headers_from_env(monkeypatch):
+    monkeypatch.setenv("K8S_MCP_HOST_HEADER", "k8s-inspector.bosgenesis.local")
+    monkeypatch.setenv("HELM_MCP_HOST_HEADER", "helm-manager.bosgenesis.local")
+
+    settings = Settings.from_env()
+
+    assert settings.k8s_mcp.host_header == "k8s-inspector.bosgenesis.local"
+    assert settings.helm_mcp.host_header == "helm-manager.bosgenesis.local"
+
+
 def test_effective_safe_dict_contains_no_secret_keys():
     settings = Settings.from_env()
 

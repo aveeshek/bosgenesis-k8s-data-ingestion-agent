@@ -8,7 +8,7 @@ Skill documentation exists, but no runtime skill package is implemented.
 
 - REST API for on-demand scans.
 - Scheduler for periodic scans.
-- Future optional MCP tool surface is not implemented yet.
+- Remote MCP tool surface is implemented at `/mcp`.
 
 ## Responsibilities
 

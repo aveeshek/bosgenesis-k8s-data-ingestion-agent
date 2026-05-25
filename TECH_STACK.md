@@ -34,7 +34,7 @@
 ## Kubernetes and deployment
 
 - Docker or equivalent OCI image build tool
-- Kubernetes Deployment, Service, ConfigMap, Secret reference, ServiceAccount, Role, RoleBinding, NetworkPolicy, and optional Ingress
+- Kubernetes Deployment, Service, ConfigMap, Secret reference, ServiceAccount, Role, RoleBinding, NetworkPolicy, and default-enabled Ingress
 - Helm v3 chart for packaging and environment-specific values
 - Namespace-scoped RBAC only
 
@@ -54,4 +54,3 @@
 - Kubernetes Secret references for credentials
 - Explicit MCP allowlists and mutation denylists
 - Bounded log collection configuration
-

@@ -5,9 +5,15 @@ from __future__ import annotations
 import asyncio
 
 from bosgenesis_k8s_data_ingestion_agent.change_detection import ChangeDetector, InMemoryHashStateStore
+from bosgenesis_k8s_data_ingestion_agent.collectors import HelmCollector, KubernetesCollector
 from bosgenesis_k8s_data_ingestion_agent.config import Settings
 from bosgenesis_k8s_data_ingestion_agent.core import ScanOrchestrator
 from bosgenesis_k8s_data_ingestion_agent.entrypoints.runtime import RuntimeMode, parse_args, run_mode
+from bosgenesis_k8s_data_ingestion_agent.mcp_clients import (
+    HelmManagerClient,
+    K8sInspectorClient,
+    StreamableHttpMcpTransport,
+)
 from bosgenesis_k8s_data_ingestion_agent.memory import MemoryRecordBuilder, MemoryRouter
 from bosgenesis_k8s_data_ingestion_agent.observability import configure_logging
 from bosgenesis_k8s_data_ingestion_agent.sinks import SinkRouter, StdoutSink
@@ -18,6 +24,24 @@ from bosgenesis_k8s_data_ingestion_agent.sinks.redis import RedisSink
 
 
 def build_orchestrator(settings: Settings) -> ScanOrchestrator:
+    k8s_collector = None
+    helm_collector = None
+    if settings.k8s_mcp.enabled:
+        k8s_transport = StreamableHttpMcpTransport(
+            timeout_seconds=settings.k8s_mcp.timeout_seconds,
+            host_header=settings.k8s_mcp.host_header,
+        )
+        k8s_collector = KubernetesCollector(
+            K8sInspectorClient(settings.k8s_mcp.url, k8s_transport)
+        )
+    if settings.helm_mcp.enabled:
+        helm_transport = StreamableHttpMcpTransport(
+            timeout_seconds=settings.helm_mcp.timeout_seconds,
+            host_header=settings.helm_mcp.host_header,
+        )
+        helm_collector = HelmCollector(
+            HelmManagerClient(settings.helm_mcp.url, helm_transport)
+        )
     sinks = [
         PostgresSink(
             dsn=settings.sinks.postgres_dsn,
@@ -55,6 +79,8 @@ def build_orchestrator(settings: Settings) -> ScanOrchestrator:
             sinks=sinks,
             strict=settings.agent.strict_sinks,
         ),
+        k8s_collector=k8s_collector,
+        helm_collector=helm_collector,
         memory_record_builder=MemoryRecordBuilder(),
         memory_router=MemoryRouter(memory_sinks) if memory_sinks else None,
     )

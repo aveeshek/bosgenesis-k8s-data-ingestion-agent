@@ -2,6 +2,11 @@ The BOS Genesis K8s Data Ingestion Agent has been deployed.
 
 Service:
   {{ include "data-ingestion-agent.name" . }}.{{ include "data-ingestion-agent.namespace" . }}.svc.cluster.local:{{ .Values.service.port }}
+{{- if .Values.ingress.enabled }}
+
+Ingress:
+  http://{{ .Values.ingress.host }}
+{{- end }}
 
 Health:
   kubectl -n {{ include "data-ingestion-agent.namespace" . }} port-forward svc/{{ include "data-ingestion-agent.name" . }} 8080:{{ .Values.service.port }}
@@ -9,4 +14,3 @@ Health:
 
 On-demand scan:
   curl -X POST http://127.0.0.1:8080/scan/run -H 'Content-Type: application/json' -d '{"trigger_type":"manual","namespace":"bosgenesis"}'
-

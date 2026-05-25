@@ -1,0 +1,83 @@
+# Codex project configuration for bosgenesis-k8s-data-ingestion-agent.
+# This file contains non-secret defaults only.
+
+[project]
+name = "bosgenesis-k8s-data-ingestion-agent"
+description = "Read-only BOS Genesis Kubernetes and Helm data ingestion agent."
+default_namespace = "bosgenesis"
+python_package = "bosgenesis_k8s_data_ingestion_agent"
+
+[runtime]
+default_mode = "service"
+supported_modes = ["api", "scheduler", "service"]
+api_port = 8080
+mcp_allowed_hosts = [
+  "data-ingestion-agent.bosgenesis.local",
+  "bosgenesis-k8s-data-ingestion-agent",
+  "bosgenesis-k8s-data-ingestion-agent.bosgenesis.svc",
+  "bosgenesis-k8s-data-ingestion-agent.bosgenesis.svc.cluster.local",
+  "localhost",
+  "127.0.0.1",
+]
+scan_interval_seconds = 3600
+run_on_startup = true
+
+[commands]
+unit_tests = "python -m pytest"
+e2e_tests = "python -m pytest tests/e2e"
+lint = "python -m ruff check ."
+run_api = "bosgenesis-k8s-data-ingestion-agent api"
+run_scheduler = "bosgenesis-k8s-data-ingestion-agent scheduler"
+run_service = "bosgenesis-k8s-data-ingestion-agent service"
+deploy = "playbook/deploy.sh"
+
+[deployment]
+namespace = "bosgenesis"
+deployment_name = "bosgenesis-k8s-data-ingestion-agent"
+container_name = "app"
+image_repository = "bosgenesis-k8s-data-ingestion-agent"
+image_tag = "0.0.1"
+remote_user = "taieuser"
+remote_host = "10.99.52.165"
+deploy_method = "kustomize"
+optional_ingress_host = "data-ingestion-agent.bosgenesis.local"
+
+[services]
+data_ingestion_mcp_url = "http://data-ingestion-agent.bosgenesis.local/mcp"
+k8s_mcp_url = "http://k8s-inspector.bosgenesis.local/mcp"
+helm_mcp_url = "http://helm-manager.bosgenesis.local/mcp"
+postgres_host = "postgresql.bosgenesis.svc.cluster.local"
+clickhouse_host = "clickhouse.bosgenesis.svc.cluster.local"
+qdrant_url = "http://qdrant.bosgenesis.svc.cluster.local:6333"
+redis_host = "redis-master.bosgenesis.svc.cluster.local"
+
+[safety]
+read_only_kubernetes = true
+read_only_helm = true
+allow_raw_kubectl_in_runtime = false
+allow_raw_helm_in_runtime = false
+allow_secret_collection = false
+allow_remediation = false
+allow_mop_execution = false
+letta_enabled_by_default = false
+
+[notes]
+secrets_policy = "Do not commit POSTGRES_DSN, CLICKHOUSE_PASSWORD, QDRANT_API_KEY, REDIS_PASSWORD, kubeconfig, tokens, or production credentials."
+live_e2e_policy = "Live e2e tests are opt-in with RUN_LIVE_E2E=true and AGENT_BASE_URL set."
+
+[mcp_servers.data_ingestion_agent]
+enabled = true
+url = "http://data-ingestion-agent.bosgenesis.local/mcp"
+startup_timeout_sec = 20
+tool_timeout_sec = 180
+default_tools_approval_mode = "prompt"
+
+enabled_tools = [
+  "data_ingestion_health",
+  "data_ingestion_run_scan",
+  "data_ingestion_latest_scan",
+  "data_ingestion_effective_config",
+]
+
+[mcp_servers.data_ingestion_agent.tools.data_ingestion_run_scan]
+approval_mode = "prompt"

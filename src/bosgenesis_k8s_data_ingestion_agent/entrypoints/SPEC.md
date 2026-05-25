@@ -13,7 +13,7 @@ Entrypoints now start the agent in three runtime modes:
 - Parse CLI runtime mode.
 - Load settings from environment variables.
 - Configure structured JSON logging.
-- Build the scan orchestrator and enabled sinks.
+- Build the scan orchestrator, enabled collectors, live MCP transports, and enabled sinks.
 - Start Uvicorn for API mode.
 - Start the scheduler loop for scheduler mode.
 - Start API and scheduler concurrently for service mode.

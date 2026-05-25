@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import timedelta
+import json
 import logging
 from typing import Any, Protocol
+
+from mcp import ClientSession
+from mcp.client.streamable_http import streamablehttp_client
 
 from bosgenesis_k8s_data_ingestion_agent.errors import McpClientError
 from bosgenesis_k8s_data_ingestion_agent.mcp_clients.policy import McpToolPolicy
@@ -27,6 +32,68 @@ class InMemoryMcpTransport:
         if isinstance(response, Exception):
             raise response
         return response if response is not None else {}
+
+
+@dataclass
+class StreamableHttpMcpTransport:
+    timeout_seconds: float = 30
+    sse_read_timeout_seconds: float = 300
+    host_header: str | None = None
+
+    async def call_tool(self, endpoint_url: str, tool_name: str, arguments: dict[str, Any]) -> Any:
+        timeout = timedelta(seconds=self.timeout_seconds)
+        sse_timeout = timedelta(seconds=self.sse_read_timeout_seconds)
+        headers = {"Host": self.host_header} if self.host_header else None
+        async with streamablehttp_client(
+            endpoint_url,
+            headers=headers,
+            timeout=timeout,
+            sse_read_timeout=sse_timeout,
+        ) as (read_stream, write_stream, _get_session_id):
+            async with ClientSession(read_stream, write_stream, read_timeout_seconds=timeout) as session:
+                await session.initialize()
+                result = await session.call_tool(
+                    tool_name,
+                    arguments,
+                    read_timeout_seconds=timeout,
+                )
+                return _unwrap_call_tool_result(result)
+
+
+def _unwrap_call_tool_result(result: Any) -> Any:
+    if getattr(result, "isError", False):
+        text = _content_text(getattr(result, "content", None))
+        raise McpClientError(text or f"MCP tool returned error: {result!r}")
+
+    structured_content = getattr(result, "structuredContent", None)
+    if structured_content is not None:
+        return _unwrap_result_key(structured_content)
+
+    text = _content_text(getattr(result, "content", None))
+    if text:
+        try:
+            return _unwrap_result_key(json.loads(text))
+        except json.JSONDecodeError:
+            return text
+
+    return {}
+
+
+def _content_text(content: Any) -> str:
+    if not isinstance(content, list):
+        return ""
+    chunks = []
+    for item in content:
+        text = getattr(item, "text", None)
+        if text:
+            chunks.append(str(text))
+    return "\n".join(chunks)
+
+
+def _unwrap_result_key(payload: Any) -> Any:
+    if isinstance(payload, dict) and "result" in payload and len(payload) == 1:
+        return payload["result"]
+    return payload
 
 
 @dataclass
@@ -74,4 +141,3 @@ class BaseMcpClient:
             extra={"event": "mcp_call_success", "tool_name": tool_name},
         )
         return result
-

@@ -18,6 +18,6 @@ This directory contains executable Helm templates.
 ## Responsibilities
 
 - Render namespace-scoped resources.
-- Support optional Secret and Ingress.
+- Support optional Secret and default-enabled configurable Ingress.
 - Use consistent labels.
 - Pass runtime mode and environment settings to the container.

@@ -19,11 +19,13 @@ database=bosgenesis
 
 - `init_schema.sql`: creates the `k8s_ingestion` schema and core tables.
 - `init_pgvector.sql`: optional vector-memory table. Run only when the `vector` extension is installed.
+- `grant_runtime_user.sql`: grants the default runtime user permission to write sink data.
 
 ## Suggested execution
 
 ```bash
 psql "$POSTGRES_DSN" -f sinks/postgresql/init_schema.sql
+psql "$POSTGRES_ADMIN_DSN" -f sinks/postgresql/grant_runtime_user.sql
 psql "$POSTGRES_DSN" -f sinks/postgresql/init_pgvector.sql
 ```
 
@@ -35,4 +37,3 @@ psql "$POSTGRES_DSN" -f sinks/postgresql/init_pgvector.sql
 - `change_events`: normalized change timeline.
 - `latest_entity_hashes`: fast durable hash lookup for deduplication.
 - `memory_vectors`: optional vector memory records for retrieval workflows.
-

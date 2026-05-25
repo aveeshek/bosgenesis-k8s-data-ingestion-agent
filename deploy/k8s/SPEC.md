@@ -25,6 +25,8 @@ bosgenesis-k8s-data-ingestion-agent service
 
 This enables the API and hourly scheduler together.
 
+Ingress is included in the default kustomization and exposes `data-ingestion-agent.bosgenesis.local`.
+
 ## Constraints
 
 - Namespace-scoped deployment.

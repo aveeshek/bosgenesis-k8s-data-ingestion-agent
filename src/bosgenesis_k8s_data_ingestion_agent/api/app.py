@@ -2,18 +2,31 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from dataclasses import asdict
 
 from bosgenesis_k8s_data_ingestion_agent.config import Settings
 from bosgenesis_k8s_data_ingestion_agent.core import ScanOrchestrator
 from bosgenesis_k8s_data_ingestion_agent.models import ScanRequest
+from bosgenesis_k8s_data_ingestion_agent.api.mcp import create_mcp_server
 
 
 def create_app(settings: Settings, orchestrator: ScanOrchestrator):
     from fastapi import FastAPI
 
-    app = FastAPI(title="BOS Genesis K8s Data Ingestion Agent")
     latest_summary = {"value": None}
+    mcp_server = create_mcp_server(settings, orchestrator, latest_summary)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        _ = app
+        async with mcp_server.session_manager.run():
+            yield
+
+    app = FastAPI(
+        title="BOS Genesis K8s Data Ingestion Agent",
+        lifespan=lifespan,
+    )
 
     @app.get("/health")
     async def health():
@@ -21,6 +34,7 @@ def create_app(settings: Settings, orchestrator: ScanOrchestrator):
             "status": "ok",
             "namespace": settings.agent.namespace,
             "components": settings.effective_safe_dict(),
+            "mcp_endpoint": "/mcp",
         }
 
     @app.post("/scan/run")
@@ -48,5 +62,6 @@ def create_app(settings: Settings, orchestrator: ScanOrchestrator):
     async def effective_config():
         return settings.effective_safe_dict()
 
-    return app
+    app.mount("/", mcp_server.streamable_http_app(), name="mcp")
 
+    return app

@@ -8,7 +8,7 @@ No overlays are implemented yet.
 
 - Edit raw manifests directly for immediate use.
 - Use Helm values for repeatable environment customization.
-- Use `playbook/deploy.sh` variables for image tag, target node, deploy method, and optional ingress.
+- Use `playbook/deploy.sh` variables for image tag, target node, deploy method, and ingress enablement.
 
 ## Future responsibilities
 

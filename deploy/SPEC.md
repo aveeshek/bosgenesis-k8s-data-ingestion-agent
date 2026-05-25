@@ -12,7 +12,7 @@ The `deploy` directory now contains raw Kubernetes deployment assets.
 - Secret example.
 - Deployment.
 - Service.
-- Optional Ingress.
+- Default-enabled Ingress.
 - Kustomization.
 
 ## Defaults
@@ -22,6 +22,7 @@ The `deploy` directory now contains raw Kubernetes deployment assets.
 - Scan interval: `3600` seconds.
 - API port: `8080`.
 - Image: `bosgenesis-k8s-data-ingestion-agent:0.0.1`.
+- Ingress host: `data-ingestion-agent.bosgenesis.local`.
 
 ## Not implemented yet
 

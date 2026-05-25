@@ -23,15 +23,16 @@ Equivalent explicit command:
 IMAGE_TAG=0.0.1 \
 REMOTE_USER=taieuser \
 REMOTE_HOST=10.99.52.165 \
-DEPLOY_METHOD=kustomize \
 ./playbook/deploy.sh
 ```
 
-## Enable Ingress
+## Ingress
 
 ```bash
-ENABLE_INGRESS=true ./playbook/deploy.sh
+./playbook/deploy.sh
 ```
+
+Ingress is enabled by default.
 
 Default ingress host:
 
@@ -39,16 +40,41 @@ Default ingress host:
 data-ingestion-agent.bosgenesis.local
 ```
 
+Disable ingress:
+
+```bash
+ENABLE_INGRESS=false ./playbook/deploy.sh
+```
+
 ## Helm Deployment
 
 ```bash
-DEPLOY_METHOD=helm ./playbook/deploy.sh
+./playbook/deploy.sh
 ```
 
-Enable ingress with Helm:
+For PostgreSQL and ClickHouse credentials, create a private Helm values file:
 
 ```bash
-DEPLOY_METHOD=helm ENABLE_INGRESS=true ./playbook/deploy.sh
+cp charts/bosgenesis-k8s-data-ingestion-agent/values.credentials.example.yaml \
+  charts/bosgenesis-k8s-data-ingestion-agent/values.credentials.yaml
+```
+
+Edit `values.credentials.yaml`, then deploy:
+
+```bash
+./playbook/deploy.sh
+```
+
+Deploy with Helm and default ingress:
+
+```bash
+./playbook/deploy.sh
+```
+
+Disable ingress with Helm:
+
+```bash
+ENABLE_INGRESS=false ./playbook/deploy.sh
 ```
 
 ## Runtime Modes
@@ -98,4 +124,3 @@ curl -X POST http://127.0.0.1:8080/scan/run \
   -H "Content-Type: application/json" \
   -d '{"trigger_type":"manual","namespace":"bosgenesis"}'
 ```
-

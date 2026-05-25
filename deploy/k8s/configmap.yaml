@@ -16,8 +16,10 @@ data:
   API_PORT: "8080"
   K8S_MCP_ENABLED: "true"
   K8S_MCP_URL: "http://bosgenesis-k8s-inspector-mcp.bosgenesis.svc.cluster.local:8080/mcp"
+  K8S_MCP_HOST_HEADER: "k8s-inspector.bosgenesis.local"
   HELM_MCP_ENABLED: "true"
   HELM_MCP_URL: "http://bosgenesis-helm-manager-mcp.bosgenesis.svc.cluster.local:8080/mcp"
+  HELM_MCP_HOST_HEADER: "helm-manager.bosgenesis.local"
   POSTGRES_ENABLED: "true"
   CLICKHOUSE_ENABLED: "true"
   CLICKHOUSE_HOST: "clickhouse.bosgenesis.svc.cluster.local"
@@ -36,4 +38,3 @@ data:
   STDOUT_ENABLED: "false"
   LOG_LEVEL: "INFO"
   OTEL_SERVICE_NAME: "bosgenesis-k8s-data-ingestion-agent"
-

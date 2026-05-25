@@ -20,6 +20,13 @@ def _env_int(name: str, default: int) -> int:
     return int(value)
 
 
+def _env_csv(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return tuple(item.strip() for item in value.split(",") if item.strip())
+
+
 @dataclass(frozen=True)
 class AgentSettings:
     namespace: str = "bosgenesis"
@@ -33,12 +40,22 @@ class ApiSettings:
     enabled: bool = True
     host: str = "0.0.0.0"
     port: int = 8080
+    mcp_allowed_hosts: tuple[str, ...] = (
+        "data-ingestion-agent.bosgenesis.local",
+        "bosgenesis-k8s-data-ingestion-agent",
+        "bosgenesis-k8s-data-ingestion-agent.bosgenesis",
+        "bosgenesis-k8s-data-ingestion-agent.bosgenesis.svc",
+        "bosgenesis-k8s-data-ingestion-agent.bosgenesis.svc.cluster.local",
+        "localhost",
+        "127.0.0.1",
+    )
 
 
 @dataclass(frozen=True)
 class McpEndpointSettings:
     enabled: bool = True
     url: str = ""
+    host_header: str | None = None
     timeout_seconds: int = 30
     retries: int = 2
 
@@ -104,16 +121,22 @@ class Settings:
                 enabled=_env_bool("API_ENABLED", True),
                 host=os.getenv("API_HOST", "0.0.0.0"),
                 port=_env_int("API_PORT", 8080),
+                mcp_allowed_hosts=_env_csv(
+                    "MCP_ALLOWED_HOSTS",
+                    ApiSettings().mcp_allowed_hosts,
+                ),
             ),
             k8s_mcp=McpEndpointSettings(
                 enabled=_env_bool("K8S_MCP_ENABLED", True),
                 url=os.getenv("K8S_MCP_URL", "http://k8s-inspector.bosgenesis.local/mcp"),
+                host_header=os.getenv("K8S_MCP_HOST_HEADER"),
                 timeout_seconds=_env_int("K8S_MCP_TIMEOUT_SECONDS", 30),
                 retries=_env_int("K8S_MCP_RETRIES", 2),
             ),
             helm_mcp=McpEndpointSettings(
                 enabled=_env_bool("HELM_MCP_ENABLED", True),
                 url=os.getenv("HELM_MCP_URL", "http://helm-manager.bosgenesis.local/mcp"),
+                host_header=os.getenv("HELM_MCP_HOST_HEADER"),
                 timeout_seconds=_env_int("HELM_MCP_TIMEOUT_SECONDS", 30),
                 retries=_env_int("HELM_MCP_RETRIES", 2),
             ),

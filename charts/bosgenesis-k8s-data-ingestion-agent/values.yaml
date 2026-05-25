@@ -6,6 +6,7 @@ image:
   pullPolicy: IfNotPresent
 
 runtimeMode: service
+rolloutTimestamp: ""
 
 namespaceOverride: bosgenesis
 
@@ -21,7 +22,9 @@ config:
   apiHost: "0.0.0.0"
   apiPort: "8080"
   k8sMcpUrl: "http://bosgenesis-k8s-inspector-mcp.bosgenesis.svc.cluster.local:8080/mcp"
+  k8sMcpHostHeader: "k8s-inspector.bosgenesis.local"
   helmMcpUrl: "http://bosgenesis-helm-manager-mcp.bosgenesis.svc.cluster.local:8080/mcp"
+  helmMcpHostHeader: "helm-manager.bosgenesis.local"
   postgresEnabled: "true"
   clickhouseEnabled: "true"
   clickhouseHost: "clickhouse.bosgenesis.svc.cluster.local"
@@ -41,6 +44,9 @@ config:
   logLevel: INFO
 
 secret:
+  # Keep this false in the committed default file.
+  # For real deployments, copy values.credentials.example.yaml to values.credentials.yaml,
+  # fill real credentials, and run ./playbook/deploy.sh.
   create: false
   name: bosgenesis-k8s-data-ingestion-agent-secret
   postgresDsn: ""
@@ -53,7 +59,7 @@ service:
   port: 8080
 
 ingress:
-  enabled: false
+  enabled: true
   className: nginx
   host: data-ingestion-agent.bosgenesis.local
 
@@ -69,4 +75,3 @@ podSecurityContext:
   runAsNonRoot: true
   runAsUser: 10001
   fsGroup: 10001
-

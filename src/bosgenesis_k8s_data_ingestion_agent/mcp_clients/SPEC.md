@@ -12,6 +12,9 @@ MCP clients wrap Kubernetes Inspector and Helm Manager calls through an injectab
 - Run-context argument enrichment with namespace and correlation ID.
 - Structured logs around MCP call start/success/failure.
 - `InMemoryMcpTransport` for unit and in-process e2e tests.
+- `StreamableHttpMcpTransport` for live MCP calls through streamable HTTP.
+- Optional MCP `Host` header override for BOS Genesis MCP servers that enforce allowed hostnames while being called through ClusterIP services.
+- MCP tool result unwrapping for structured content, JSON text content, and single-key `result` wrappers.
 - Transport errors normalized into `McpClientError`.
 
 ## Kubernetes read allowlist

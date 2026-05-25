@@ -12,6 +12,7 @@ The playbook folder now contains deployment automation and operator documentatio
 ## Responsibilities
 
 - Deploy through the cluster containerd import workflow.
-- Support raw kustomize manifests or Helm deployment.
-- Support optional ingress.
+- Default to Helm deployment while still supporting raw kustomize manifests.
+- Enable ingress by default while supporting explicit disablement.
+- Auto-load `values.credentials.yaml` when present and support `HELM_VALUES_FILE` for private Helm credential overrides.
 - Document API health and on-demand scan checks.

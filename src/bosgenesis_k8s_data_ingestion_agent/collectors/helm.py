@@ -13,7 +13,7 @@ def _items(payload: Any) -> list[dict[str, Any]]:
     if isinstance(payload, list):
         return [item for item in payload if isinstance(item, dict)]
     if isinstance(payload, dict):
-        for key in ("releases", "items", "data"):
+        for key in ("releases", "items", "data", "output", "result"):
             value = payload.get(key)
             if isinstance(value, list):
                 return [item for item in value if isinstance(item, dict)]
@@ -69,4 +69,3 @@ class HelmCollector:
                 "repo_list": await self.client.call_tool("helm_repo_list", {}, run_context),
             },
         )
-

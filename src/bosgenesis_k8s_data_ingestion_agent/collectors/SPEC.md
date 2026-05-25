@@ -34,6 +34,8 @@ Collects:
 - optional manifest when `include_manifests=true`
 - repository list
 
+The Helm collector accepts release-list payloads from common MCP response shapes, including `releases`, `items`, `data`, `output`, and single-key `result` wrappers.
+
 ## Constraints
 
 - Collectors do not persist data.

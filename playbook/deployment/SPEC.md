@@ -10,8 +10,9 @@ This directory contains a concrete deployment guide.
 - Docker save.
 - SCP tar to cluster node.
 - containerd image import with `ctr`.
-- Raw manifest deployment through `kubectl apply -k`.
-- Helm deployment through `helm upgrade --install`.
-- Optional ingress.
+- Default Helm deployment through `helm upgrade --install`.
+- Auto-loaded private values override for credentials.
+- Raw manifest deployment through `kubectl apply -k` when explicitly requested.
+- Default-enabled ingress with explicit disablement option.
 - Rollout and service verification.
 - API health and on-demand scan checks.
