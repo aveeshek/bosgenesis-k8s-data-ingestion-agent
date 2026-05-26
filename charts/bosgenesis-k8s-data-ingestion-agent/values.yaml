@@ -42,6 +42,8 @@ config:
   redisKeyPrefix: "bg:k8s-ingestion"
   stdoutEnabled: "false"
   logLevel: INFO
+  langfuseEnabled: "true"
+  langfuseBaseUrl: "http://langfuse-web.bosgenesis.svc.cluster.local:3000"
 
 secret:
   # Keep this false in the committed default file.
@@ -53,6 +55,8 @@ secret:
   clickhousePassword: ""
   qdrantApiKey: ""
   redisPassword: ""
+  langfusePublicKey: ""
+  langfuseSecretKey: ""
 
 service:
   type: ClusterIP

@@ -13,6 +13,25 @@ def test_settings_from_env(monkeypatch):
     assert settings.agent.run_on_startup is True
     assert settings.agent.scan_interval_seconds == 60
     assert settings.sinks.redis_enabled is True
+    assert settings.observability.langfuse_enabled is True
+
+
+def test_langfuse_can_be_disabled(monkeypatch):
+    monkeypatch.setenv("LANGFUSE_ENABLED", "false")
+
+    settings = Settings.from_env()
+
+    assert settings.observability.langfuse_enabled is False
+
+
+def test_effective_safe_dict_redacts_langfuse_secret(monkeypatch):
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "secret-value")
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "public-value")
+
+    effective = Settings.from_env().effective_safe_dict()
+
+    assert effective["observability"]["langfuse_public_key"] == "public-value"
+    assert effective["observability"]["langfuse_secret_key"] == "***REDACTED***"
 
 
 def test_mcp_allowed_hosts_from_env(monkeypatch):

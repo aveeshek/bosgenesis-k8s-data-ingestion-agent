@@ -119,6 +119,23 @@ SKIP_BUILD=true SKIP_IMAGE_TRANSFER=true ./playbook/deploy.sh
 
 ## Configure Sinks
 
+`deploy.sh` prompts for sink selection when run interactively. Press Enter to keep the default sink set:
+
+```text
+postgres clickhouse qdrant redis
+```
+
+Non-interactive examples:
+
+```bash
+SINKS_ENABLED="postgres clickhouse" ./playbook/deploy.sh
+SINKS_ENABLED="postgres,clickhouse,qdrant" ./playbook/deploy.sh
+SINKS_ENABLED=none ./playbook/deploy.sh
+ENABLE_SINK_PROMPT=false POSTGRES_ENABLED=true CLICKHOUSE_ENABLED=false QDRANT_ENABLED=false REDIS_ENABLED=false ./playbook/deploy.sh
+```
+
+The script passes these choices as Helm runtime overrides and patches the ConfigMap for raw kustomize deployments.
+
 For raw Kubernetes deployment, sink enablement is controlled in:
 
 ```text

@@ -16,6 +16,7 @@ This agent is a read-only ETL and evidence-ingestion service for BOS Genesis Kub
 - Keep Letta disabled unless explicitly requested and configuration-gated.
 - Keep live e2e tests opt-in.
 - Do not commit credentials, kubeconfigs, tokens, passwords, or real DSNs.
+- Keep Langfuse tracing enabled by default, but config-gated with `LANGFUSE_ENABLED=false`.
 
 ## Important paths
 
@@ -150,3 +151,20 @@ The agent has a thin agentic memory abstraction:
 - Semantic memory: compact operational facts.
 
 `MemoryRecordBuilder` creates memory records. `MemoryRouter` routes them to memory-capable sinks. `QdrantSink` supports `write_memory()`.
+
+## Langfuse tracing
+
+Langfuse tracing is enabled by default when credentials are provided:
+
+- `LANGFUSE_ENABLED=true`
+- `LANGFUSE_BASE_URL=http://langfuse-web.bosgenesis.svc.cluster.local:3000`
+- `LANGFUSE_PUBLIC_KEY` from Secret
+- `LANGFUSE_SECRET_KEY` from Secret
+
+Disable with:
+
+```bash
+LANGFUSE_ENABLED=false ./playbook/deploy.sh
+```
+
+Scan summaries include `trace_ids.langfuse` when tracing is active.

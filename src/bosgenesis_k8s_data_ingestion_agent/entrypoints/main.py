@@ -15,7 +15,7 @@ from bosgenesis_k8s_data_ingestion_agent.mcp_clients import (
     StreamableHttpMcpTransport,
 )
 from bosgenesis_k8s_data_ingestion_agent.memory import MemoryRecordBuilder, MemoryRouter
-from bosgenesis_k8s_data_ingestion_agent.observability import configure_logging
+from bosgenesis_k8s_data_ingestion_agent.observability import LangfuseTracer, configure_logging
 from bosgenesis_k8s_data_ingestion_agent.sinks import SinkRouter, StdoutSink
 from bosgenesis_k8s_data_ingestion_agent.sinks.clickhouse import ClickHouseSink
 from bosgenesis_k8s_data_ingestion_agent.sinks.postgres import PostgresSink
@@ -83,6 +83,7 @@ def build_orchestrator(settings: Settings) -> ScanOrchestrator:
         helm_collector=helm_collector,
         memory_record_builder=MemoryRecordBuilder(),
         memory_router=MemoryRouter(memory_sinks) if memory_sinks else None,
+        langfuse_tracer=LangfuseTracer.from_settings(settings),
     )
 
 

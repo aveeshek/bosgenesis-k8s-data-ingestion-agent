@@ -5,6 +5,9 @@ from bosgenesis_k8s_data_ingestion_agent.observability.logging import (
     configure_logging,
     get_logger,
 )
+from bosgenesis_k8s_data_ingestion_agent.observability.langfuse import (
+    LangfuseTracer,
+    NoopLangfuseTracer,
+)
 
-__all__ = ["JsonFormatter", "configure_logging", "get_logger"]
-
+__all__ = ["JsonFormatter", "LangfuseTracer", "NoopLangfuseTracer", "configure_logging", "get_logger"]

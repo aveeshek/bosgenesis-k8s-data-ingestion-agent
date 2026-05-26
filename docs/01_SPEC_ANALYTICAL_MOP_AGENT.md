@@ -282,7 +282,7 @@ sinks:
 observability:
   langfuse:
     enabled: true
-    host: http://langfuse.bosgenesis.local
+    host: http://langfuse-web.bosgenesis.svc.cluster.local:3000
   signoz:
     enabled: true
     otlp_endpoint: http://signoz-otel-collector.signoz:4317

@@ -21,6 +21,8 @@ mcp_allowed_hosts = [
 ]
 scan_interval_seconds = 3600
 run_on_startup = true
+langfuse_enabled = true
+langfuse_base_url = "http://langfuse-web.bosgenesis.svc.cluster.local:3000"
 
 [commands]
 unit_tests = "python -m pytest"

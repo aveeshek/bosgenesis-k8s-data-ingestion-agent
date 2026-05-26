@@ -100,6 +100,23 @@ helm upgrade --install bosgenesis-k8s-data-ingestion-agent \
   --set config.redisEnabled=false
 ```
 
+`playbook/deploy.sh` prompts for sink selection when run interactively. Press Enter to keep the default set enabled:
+
+```text
+postgres clickhouse qdrant redis
+```
+
+You can also run non-interactively:
+
+```bash
+SINKS_ENABLED="postgres clickhouse" ./playbook/deploy.sh
+SINKS_ENABLED="postgres,clickhouse,qdrant" ./playbook/deploy.sh
+SINKS_ENABLED=none ./playbook/deploy.sh
+ENABLE_SINK_PROMPT=false POSTGRES_ENABLED=true CLICKHOUSE_ENABLED=false QDRANT_ENABLED=false REDIS_ENABLED=false ./playbook/deploy.sh
+```
+
+`SINKS_ENABLED=all` keeps the default sink set. `stdout` is available as an explicit selection but is disabled by default.
+
 ### Sink Connection Settings
 
 | Sink | Important settings |
@@ -143,6 +160,47 @@ K8S_MCP_HOST_HEADER: "k8s-inspector.bosgenesis.local"
 HELM_MCP_URL: "http://bosgenesis-helm-manager-mcp.bosgenesis.svc.cluster.local:8080/mcp"
 HELM_MCP_HOST_HEADER: "helm-manager.bosgenesis.local"
 ```
+
+## Langfuse Tracing
+
+Langfuse tracing is enabled by default and can be disabled through config.
+
+Non-secret runtime settings live in ConfigMap or Helm values:
+
+```text
+LANGFUSE_ENABLED=true
+LANGFUSE_BASE_URL=http://langfuse-web.bosgenesis.svc.cluster.local:3000
+```
+
+Secret keys must live in `bosgenesis-k8s-data-ingestion-agent-secret` or Helm credentials values:
+
+```text
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+```
+
+Disable tracing:
+
+```bash
+LANGFUSE_ENABLED=false ./playbook/deploy.sh
+```
+
+For Helm:
+
+```bash
+helm upgrade --install bosgenesis-k8s-data-ingestion-agent \
+  charts/bosgenesis-k8s-data-ingestion-agent \
+  --namespace bosgenesis \
+  --set config.langfuseEnabled=false
+```
+
+When credentials or the Langfuse SDK are unavailable, the agent logs a warning and continues without tracing. Successful traces add `trace_ids.langfuse` to scan summaries.
+
+## Langflow Architecture View
+
+A visualization-only Langflow graph is available at `langflow/data-ingestion-agent-architecture.json`.
+
+Import it into Langflow to view the high-level data flow from Codex/GPT/agents through the agent MCP endpoint, internal workflow, existing MCP tools, storage sinks, and observability sinks. The graph is documentation-only and does not execute calls or store credentials.
 
 ## On-Demand Scan
 

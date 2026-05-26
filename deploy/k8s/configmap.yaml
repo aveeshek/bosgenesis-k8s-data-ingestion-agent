@@ -38,3 +38,5 @@ data:
   STDOUT_ENABLED: "false"
   LOG_LEVEL: "INFO"
   OTEL_SERVICE_NAME: "bosgenesis-k8s-data-ingestion-agent"
+  LANGFUSE_ENABLED: "true"
+  LANGFUSE_BASE_URL: "http://langfuse-web.bosgenesis.svc.cluster.local:3000"

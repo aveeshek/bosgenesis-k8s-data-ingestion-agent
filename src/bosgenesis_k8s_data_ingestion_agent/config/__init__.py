@@ -89,7 +89,10 @@ class SinkSettings:
 class ObservabilitySettings:
     log_level: str = "INFO"
     service_name: str = "bosgenesis-k8s-data-ingestion-agent"
-    langfuse_enabled: bool = False
+    langfuse_enabled: bool = True
+    langfuse_base_url: str = "http://langfuse-web.bosgenesis.svc.cluster.local:3000"
+    langfuse_public_key: str | None = None
+    langfuse_secret_key: str | None = None
     signoz_enabled: bool = False
 
 
@@ -174,7 +177,12 @@ class Settings:
                 service_name=os.getenv(
                     "OTEL_SERVICE_NAME", "bosgenesis-k8s-data-ingestion-agent"
                 ),
-                langfuse_enabled=_env_bool("LANGFUSE_ENABLED", False),
+                langfuse_enabled=_env_bool("LANGFUSE_ENABLED", True),
+                langfuse_base_url=os.getenv(
+                    "LANGFUSE_BASE_URL", "http://langfuse-web.bosgenesis.svc.cluster.local:3000"
+                ),
+                langfuse_public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
+                langfuse_secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
                 signoz_enabled=_env_bool("SIGNOZ_ENABLED", False),
             ),
         )
@@ -184,11 +192,14 @@ class Settings:
         for secret_key in ("postgres_dsn", "clickhouse_password", "qdrant_api_key", "redis_password"):
             if sink_values.get(secret_key):
                 sink_values[secret_key] = "***REDACTED***"
+        observability_values = dict(self.observability.__dict__)
+        if observability_values.get("langfuse_secret_key"):
+            observability_values["langfuse_secret_key"] = "***REDACTED***"
         return {
             "agent": self.agent.__dict__,
             "api": self.api.__dict__,
             "k8s_mcp": self.k8s_mcp.__dict__,
             "helm_mcp": self.helm_mcp.__dict__,
             "sinks": sink_values,
-            "observability": self.observability.__dict__,
+            "observability": observability_values,
         }

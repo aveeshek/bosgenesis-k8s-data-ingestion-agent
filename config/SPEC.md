@@ -22,6 +22,10 @@ Runtime configuration is implemented in `src/bosgenesis_k8s_data_ingestion_agent
 - Redis.
 - stdout sink.
 - structured logging and service name.
+- Langfuse tracing defaults to enabled and can be disabled with `LANGFUSE_ENABLED=false`.
+- Langfuse non-secret config is loaded from `LANGFUSE_BASE_URL`.
+- Langfuse credentials are loaded from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`.
+- Effective config redacts `LANGFUSE_SECRET_KEY`.
 
 ## Secret handling
 
@@ -37,4 +41,4 @@ For Helm installs, provide these through `charts/bosgenesis-k8s-data-ingestion-a
 ## Not implemented yet
 
 - YAML/TOML config file loading.
-- Langfuse/SigNoz runtime exporters.
+- SigNoz runtime exporter.

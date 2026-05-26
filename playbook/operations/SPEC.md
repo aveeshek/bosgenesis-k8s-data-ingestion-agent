@@ -12,8 +12,10 @@ Operational controls are available through environment variables and API endpoin
 - Tune scan interval with `AGENT_SCAN_INTERVAL_SECONDS`.
 - Enable/disable sinks with sink-specific env vars.
 - Use structured JSON logs for scan, MCP, scheduler, and sink lifecycle events.
+- Enable/disable Langfuse tracing with `LANGFUSE_ENABLED`.
+- Verify Langfuse trace IDs through scan summary `trace_ids.langfuse`.
 
 ## Future operations docs
 
 - Sink-specific troubleshooting.
-- Langfuse/SigNoz trace checks after observability exporters are implemented.
+- SigNoz trace checks after OpenTelemetry exporter is implemented.
