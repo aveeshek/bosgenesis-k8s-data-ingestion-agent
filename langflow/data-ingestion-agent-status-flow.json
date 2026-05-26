@@ -1,0 +1,220 @@
+{
+  "data": {
+    "edges": [],
+    "nodes": [
+      {
+        "data": {
+          "id": "note-flow-purpose",
+          "node": {
+            "description": "# Working Flow: Data Ingestion Agent Status\n\nThis flow contains one real custom Langflow component. It performs a read-only HTTP GET against the BOS Genesis K8s Data Ingestion Agent REST API and returns JSON.\n\nDefault behavior:\n\n- Base URL: `http://data-ingestion-agent.bosgenesis.local`\n- Endpoint: `/health`\n\nYou can switch the endpoint field to `latest_scan` to call `/scan/latest`.\n\nNo secrets are stored. No scan is triggered by default.",
+            "display_name": "",
+            "documentation": "",
+            "template": {
+              "backgroundColor": "blue"
+            }
+          },
+          "type": "note"
+        },
+        "dragging": false,
+        "height": 360,
+        "id": "note-flow-purpose",
+        "measured": {
+          "height": 360,
+          "width": 560
+        },
+        "position": {
+          "x": -640,
+          "y": -100
+        },
+        "resizing": false,
+        "selected": false,
+        "type": "noteNode",
+        "width": 560
+      },
+      {
+        "data": {
+          "id": "bosgenesis-status-component",
+          "node": {
+            "base_classes": [
+              "Data"
+            ],
+            "beta": false,
+            "conditional_paths": [],
+            "custom_fields": {},
+            "description": "Read health or latest scan from the BOS Genesis K8s Data Ingestion Agent REST API.",
+            "display_name": "BOS Genesis Data Ingestion Status",
+            "documentation": "",
+            "edited": false,
+            "field_order": [
+              "code",
+              "base_url",
+              "endpoint"
+            ],
+            "frozen": false,
+            "icon": "activity",
+            "key": "BosGenesisDataIngestionStatus",
+            "legacy": false,
+            "metadata": {
+              "visualization_only": false,
+              "side_effects": "read-only",
+              "default_endpoint": "/health"
+            },
+            "minimized": false,
+            "output_types": [],
+            "outputs": [
+              {
+                "cache": true,
+                "display_name": "Status JSON",
+                "method": "fetch_status",
+                "name": "status_json",
+                "selected": "Data",
+                "tool_mode": false,
+                "types": [
+                  "Data"
+                ],
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "pinned": false,
+            "template": {
+              "_type": "CustomComponent",
+              "base_url": {
+                "_input_type": "MessageTextInput",
+                "advanced": false,
+                "display_name": "Base URL",
+                "dynamic": false,
+                "info": "Base URL for the data ingestion agent.",
+                "input_types": [
+                  "Message"
+                ],
+                "list": false,
+                "load_from_db": false,
+                "name": "base_url",
+                "placeholder": "",
+                "required": false,
+                "show": true,
+                "title_case": false,
+                "tool_mode": false,
+                "trace_as_input": true,
+                "type": "str",
+                "value": "http://data-ingestion-agent.bosgenesis.local"
+              },
+              "code": {
+                "_input_type": "CodeInput",
+                "advanced": true,
+                "display_name": "Code",
+                "dynamic": true,
+                "fileTypes": [],
+                "file_path": "",
+                "info": "",
+                "input_types": [],
+                "list": false,
+                "load_from_db": false,
+                "multiline": true,
+                "name": "code",
+                "password": false,
+                "placeholder": "",
+                "required": true,
+                "show": true,
+                "title_case": false,
+                "tool_mode": false,
+                "trace_as_input": true,
+                "type": "code",
+                "value": "from lfx.custom import Component\nfrom lfx.inputs import DropdownInput, MessageTextInput\nfrom lfx.io import Output\nfrom lfx.schema import Data\nimport json\nimport urllib.request\n\n\nclass BosGenesisDataIngestionStatus(Component):\n    display_name = \"BOS Genesis Data Ingestion Status\"\n    description = \"Read health or latest scan from the BOS Genesis K8s Data Ingestion Agent REST API.\"\n    icon = \"activity\"\n\n    inputs = [\n        MessageTextInput(\n            name=\"base_url\",\n            display_name=\"Base URL\",\n            value=\"http://data-ingestion-agent.bosgenesis.local\",\n            info=\"Base URL for the data ingestion agent.\",\n        ),\n        DropdownInput(\n            name=\"endpoint\",\n            display_name=\"Endpoint\",\n            options=[\"health\", \"latest_scan\"],\n            value=\"health\",\n            info=\"Choose which read-only endpoint to call.\",\n        ),\n    ]\n\n    outputs = [\n        Output(display_name=\"Status JSON\", name=\"status_json\", method=\"fetch_status\"),\n    ]\n\n    def fetch_status(self) -> Data:\n        path = \"/health\" if self.endpoint == \"health\" else \"/scan/latest\"\n        url = self.base_url.rstrip(\"/\") + path\n        try:\n            with urllib.request.urlopen(url, timeout=20) as response:\n                body = response.read().decode(\"utf-8\")\n                payload = json.loads(body)\n            self.status = f\"Fetched {path}\"\n            return Data(data={\"url\": url, \"response\": payload})\n        except Exception as exc:\n            self.status = f\"Failed to fetch {path}: {exc}\"\n            return Data(data={\"url\": url, \"error\": str(exc)})\n"
+              },
+              "endpoint": {
+                "_input_type": "DropdownInput",
+                "advanced": false,
+                "combobox": false,
+                "display_name": "Endpoint",
+                "dynamic": false,
+                "info": "Choose which read-only endpoint to call.",
+                "input_types": [],
+                "list": false,
+                "load_from_db": false,
+                "name": "endpoint",
+                "options": [
+                  "health",
+                  "latest_scan"
+                ],
+                "options_metadata": [],
+                "placeholder": "",
+                "required": false,
+                "show": true,
+                "title_case": false,
+                "tool_mode": false,
+                "trace_as_input": true,
+                "type": "str",
+                "value": "health"
+              }
+            }
+          },
+          "showNode": true,
+          "type": "BosGenesisDataIngestionStatus"
+        },
+        "dragging": false,
+        "height": 580,
+        "id": "bosgenesis-status-component",
+        "measured": {
+          "height": 580,
+          "width": 420
+        },
+        "position": {
+          "x": 40,
+          "y": -80
+        },
+        "resizing": false,
+        "selected": false,
+        "type": "genericNode",
+        "width": 420
+      },
+      {
+        "data": {
+          "id": "note-how-to-run",
+          "node": {
+            "description": "## How To Run\n\n1. Import this file into Langflow.\n2. Open the `BOS Genesis Data Ingestion Status` component.\n3. Keep endpoint as `health` or switch to `latest_scan`.\n4. Run the component and inspect the `Status JSON` output.\n\nThis is intentionally read-only. To trigger scans later, create a separate reviewed flow that calls `/scan/run` explicitly.",
+            "display_name": "",
+            "documentation": "",
+            "template": {
+              "backgroundColor": "green"
+            }
+          },
+          "type": "note"
+        },
+        "dragging": false,
+        "height": 320,
+        "id": "note-how-to-run",
+        "measured": {
+          "height": 320,
+          "width": 520
+        },
+        "position": {
+          "x": 540,
+          "y": -60
+        },
+        "resizing": false,
+        "selected": false,
+        "type": "noteNode",
+        "width": 520
+      }
+    ],
+    "viewport": {
+      "x": 175,
+      "y": 110,
+      "zoom": 0.75
+    }
+  },
+  "description": "Working read-only Langflow flow for the BOS Genesis K8s Data Ingestion Agent. Calls /health or /scan/latest and returns JSON.",
+  "endpoint_name": null,
+  "id": "53d89c61-9b58-4c37-b163-66af5ea33555",
+  "is_component": false,
+  "last_tested_version": "1.8.0",
+  "name": "BOS Genesis Data Ingestion Agent - Working Status Flow",
+  "tags": [
+    "bosgenesis",
+    "langflow",
+    "working-flow",
+    "read-only",
+    "data-ingestion-agent"
+  ]
+}
