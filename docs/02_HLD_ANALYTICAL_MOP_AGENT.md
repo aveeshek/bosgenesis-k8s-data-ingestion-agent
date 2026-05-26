@@ -1,374 +1,177 @@
-# Analytical MoP Agent — High Level Design
+# BOS Genesis K8s Data Ingestion Agent - High Level Design
 
-**Document status:** Draft v1.0  
-**Target platform:** BOS Genesis / BOS AI Studio  
-**Agent name:** `analytical-mop-agent`  
+**Document status:** Implemented baseline  
+**Service:** `bosgenesis-k8s-data-ingestion-agent`  
+**Namespace:** `bosgenesis`
 
 ---
 
 ## 1. Executive Summary
 
-The Analytical MoP Agent is a read-only, periodic, ETL-style agent for Kubernetes operational state collection. It uses the existing BOS Genesis Kubernetes Inspector MCP and Helm Manager MCP servers to scan a namespace, collect resource and Helm release data, normalize the collected data, detect changes through hashing, and persist the resulting facts into PostgreSQL and ClickHouse when enabled.
+The agent is a read-only operational data collector for BOS Genesis. It exposes REST and remote MCP interfaces, uses existing Kubernetes and Helm MCP servers as controlled read boundaries, persists changed observations to optional sinks, and emits Langfuse traces for each scan.
 
-It is not a remediation agent. It does not perform anomaly detection or alerts. It creates the analytical and machine-learning-ready data layer required by future MoP generation, anomaly detection, SRE analytics, and decision-support agents.
-
----
-
-## 2. High-Level Architecture
-
-```mermaid
-flowchart LR
-    subgraph Entry[Invocation Layer]
-        Scheduler[Periodic Scheduler]
-        REST[REST API /scan/run]
-        MCPTool[Optional MCP Tool]
-        LLM[LLM / Other Agent]
-    end
-
-    subgraph Agent[Analytical MoP Agent]
-        Gateway[Request Gateway]
-        Orchestrator[Scan Orchestrator]
-        KCollector[Kubernetes Collector]
-        HCollector[Helm Collector]
-        Normalizer[Normalizer + Hash Engine]
-        ChangeDetector[Change Detector]
-        SinkRouter[Sink Router]
-    end
-
-    subgraph ExistingMCP[Existing MCP Servers]
-        K8SMCP[K8s Inspector MCP]
-        HELMMCP[Helm Manager MCP]
-    end
-
-    subgraph Stores[Optional Data Stores]
-        PG[(PostgreSQL / pgvector)]
-        CH[(ClickHouse)]
-        QD[(Qdrant)]
-        REDIS[(Redis)]
-        OUT[Stdout / Streaming]
-    end
-
-    subgraph Observability[Optional Observability]
-        LF[Langfuse]
-        SZ[SigNoz / OpenTelemetry]
-        LOG[Structured Logs]
-    end
-
-    Scheduler --> Gateway
-    REST --> Gateway
-    MCPTool --> Gateway
-    LLM --> REST
-
-    Gateway --> Orchestrator
-    Orchestrator --> KCollector
-    Orchestrator --> HCollector
-
-    KCollector --> K8SMCP
-    HCollector --> HELMMCP
-
-    KCollector --> Normalizer
-    HCollector --> Normalizer
-    Normalizer --> ChangeDetector
-    ChangeDetector --> SinkRouter
-
-    SinkRouter --> PG
-    SinkRouter --> CH
-    SinkRouter --> QD
-    SinkRouter --> REDIS
-    SinkRouter --> OUT
-
-    Orchestrator --> LF
-    Orchestrator --> SZ
-    Orchestrator --> LOG
-```
+The design favors explicit deterministic code over LLM orchestration frameworks. MCP is the tool boundary; Langfuse is the tracing plane; sinks are independently configurable.
 
 ---
 
-## 3. Major Capabilities
-
-| Capability | Description |
-|---|---|
-| Periodic scan | Runs on a configurable interval. |
-| On-demand scan | Callable through REST/API/MCP. |
-| Kubernetes collection | Uses K8s MCP read tools for pods, deployments, services, PVCs, ingresses, events, logs. |
-| Helm collection | Uses Helm MCP read tools for releases, status, values, manifests, history. |
-| Change detection | Uses stable hashes to persist only changed data. |
-| PostgreSQL persistence | Stores normalized scan runs and resource snapshots for ML. |
-| ClickHouse persistence | Stores analytical facts and event-style data for dashboards. |
-| Memory integration | Optional Qdrant, pgvector, Redis, LangMem-style memory hooks. |
-| Observability | Optional Langfuse traces and SigNoz OTel spans. |
-| Fallback mode | Streams/prints result if all sinks are disabled. |
-
----
-
-## 4. Deployment Context
+## 2. System Context
 
 ```mermaid
 flowchart TB
-    subgraph Cluster[Kubernetes Cluster]
-        subgraph BOS[Namespace: bosgenesis]
-            AgentPod[Deployment: analytical-mop-agent]
-            AgentSvc[Service: analytical-mop-agent]
-            AgentIng[Optional Ingress]
-
-            K8SINS[K8s Inspector MCP]
-            HELMMGR[Helm Manager MCP]
-
-            PG[(PostgreSQL)]
-            CH[(ClickHouse)]
-            QD[(Qdrant)]
-            REDIS[(Redis)]
-            LF[Langfuse]
-        end
-
-        subgraph SIGNOZ[Namespace: signoz]
-            Collector[SigNoz OTel Collector]
-            SigUI[SigNoz UI]
-        end
+    subgraph Users["External callers"]
+        Codex["Codex"]
+        GPT["GPT-5 / agent"]
+        Human["Operator"]
+        Langflow["Langflow read-only flow"]
     end
 
-    AgentIng --> AgentSvc
-    AgentSvc --> AgentPod
-    AgentPod --> K8SINS
-    AgentPod --> HELMMGR
-    AgentPod --> PG
-    AgentPod --> CH
-    AgentPod --> QD
-    AgentPod --> REDIS
-    AgentPod --> LF
-    AgentPod --> Collector
+    subgraph BOS["Kubernetes namespace: bosgenesis"]
+        Agent["bosgenesis-k8s-data-ingestion-agent"]
+        K8S["bosgenesis-k8s-inspector-mcp"]
+        Helm["bosgenesis-helm-manager-mcp"]
+        PG[("Postgres")]
+        CH[("ClickHouse")]
+        QD[("Qdrant")]
+        RD[("Redis")]
+        LF["Langfuse web + worker"]
+    end
+
+    Codex -->|"Remote MCP /mcp"| Agent
+    GPT -->|"Remote MCP /mcp"| Agent
+    Human -->|"REST"| Agent
+    Langflow -->|"GET /health or /scan/latest"| Agent
+
+    Agent -->|"read tools"| K8S
+    Agent -->|"read tools"| Helm
+    Agent --> PG
+    Agent --> CH
+    Agent --> QD
+    Agent --> RD
+    Agent -->|"OTLP/Langfuse SDK"| LF
 ```
 
 ---
 
-## 5. Component Responsibilities
+## 3. Major Runtime Interfaces
 
-### 5.1 Request Gateway
-
-Receives scan requests from scheduler, REST API, optional MCP tool, or LLM-triggered caller. It creates `run_id`, `correlation_id`, and run context.
-
-### 5.2 Scan Orchestrator
-
-Coordinates the full run lifecycle:
-
-1. Start trace.
-2. Collect Kubernetes facts.
-3. Collect Helm facts.
-4. Normalize data.
-5. Detect changes.
-6. Persist or stream output.
-7. Write run summary.
-8. Close trace.
-
-### 5.3 Kubernetes Collector
-
-Calls Kubernetes Inspector MCP read tools only. It never calls write or mutation tools.
-
-### 5.4 Helm Collector
-
-Calls Helm Manager MCP read tools only. It never calls install, upgrade, uninstall, or rollback tools.
-
-### 5.5 Normalizer + Hash Engine
-
-Transforms raw MCP responses into canonical records. Removes volatile fields where needed and computes stable hashes.
-
-### 5.6 Change Detector
-
-Compares current hash against latest known hash from PostgreSQL or Redis. If no persistence is available, it treats all records as output records.
-
-### 5.7 Sink Router
-
-Routes records to configured sinks:
-
-- PostgreSQL sink.
-- ClickHouse sink.
-- Qdrant sink.
-- pgvector sink.
-- Redis cache sink.
-- LangMem sink.
-- disabled Letta adapter.
-- stdout/streaming fallback.
-
-### 5.8 Observability Layer
-
-Emits:
-
-- Langfuse trace per run.
-- OpenTelemetry spans per run, collector, MCP call, normalization, and sink operation.
-- Structured logs.
+| Interface | URL / Path | Purpose |
+|---|---|---|
+| REST health | `/health` | Health and safe effective config. |
+| REST run scan | `/scan/run` | Trigger one scan. |
+| REST latest scan | `/scan/latest` | Return latest in-memory summary. |
+| REST config | `/config/effective` | Return redacted effective config. |
+| Remote MCP | `/mcp` | MCP tool surface for Codex/agents. |
+| Langflow status flow | `langflow/data-ingestion-agent-status-flow.json` | Read-only status flow. |
 
 ---
 
-## 6. Data Flow
+## 4. Internal Components
+
+```mermaid
+flowchart LR
+    API["FastAPI app"] --> Orchestrator["Scan orchestrator"]
+    MCPServer["MCP server mounted at /mcp"] --> Orchestrator
+    Scheduler["Scheduler/service loop"] --> Orchestrator
+
+    Orchestrator --> KCollector["K8s collector"]
+    Orchestrator --> HCollector["Helm collector"]
+    KCollector --> KClient["K8s MCP client"]
+    HCollector --> HClient["Helm MCP client"]
+
+    Orchestrator --> Normalizers["K8s + Helm normalizers"]
+    Normalizers --> Hasher["Stable hash engine"]
+    Hasher --> Detector["Change detector"]
+    Detector --> SinkRouter["Sink router"]
+
+    SinkRouter --> Sinks["Postgres / ClickHouse / Qdrant / Redis / stdout"]
+    Orchestrator --> Tracer["Langfuse tracer"]
+    Orchestrator --> Logger["Structured logger"]
+```
+
+---
+
+## 5. Deployment Context
+
+```mermaid
+flowchart TB
+    Ingress["Ingress: data-ingestion-agent.bosgenesis.local"] --> Service["Service: bosgenesis-k8s-data-ingestion-agent"]
+    Service --> Pod["Deployment pod: app container"]
+
+    Pod --> ConfigMap["ConfigMap: non-secret settings"]
+    Pod --> Secret["Secret: credentials"]
+    Pod --> K8SService["K8s Inspector MCP service DNS"]
+    Pod --> HelmService["Helm Manager MCP service DNS"]
+    Pod --> LangfuseService["langfuse-web.bosgenesis.svc.cluster.local:3000"]
+```
+
+Runtime URLs inside the pod use service DNS, not external ingress names, for MCP dependencies and Langfuse.
+
+---
+
+## 6. Observability Flow
 
 ```mermaid
 sequenceDiagram
-    participant S as Scheduler/API/LLM
-    participant A as Analytical MoP Agent
+    participant C as Codex/Agent
+    participant A as Data Ingestion Agent
     participant K as K8s MCP
     participant H as Helm MCP
-    participant N as Normalizer
-    participant D as Change Detector
-    participant P as PostgreSQL
-    participant C as ClickHouse
-    participant O as Observability
+    participant L as Langfuse
 
-    S->>A: Trigger scan
-    A->>O: Start run trace
-    A->>K: Read namespace summary/resources/events/logs
-    K-->>A: Kubernetes state
-    A->>H: Read releases/status/history/values/manifests
-    H-->>A: Helm state
-    A->>N: Normalize raw data
-    N-->>A: Canonical observations
-    A->>D: Compute and compare hashes
-    D-->>A: New/changed records
-    A->>P: Insert run + changed snapshots if enabled
-    A->>C: Insert analytical facts if enabled
-    A->>O: Close trace with summary
-    A-->>S: Return run summary and optional stream
+    C->>A: data_ingestion_run_scan
+    A->>L: start trace data-ingestion.scan
+    A->>K: read namespace resources
+    K-->>A: resource payloads
+    A->>H: read Helm data
+    H-->>A: release payloads
+    A->>A: normalize/hash/detect changes
+    A->>A: write enabled sinks
+    A->>L: close trace with summary
+    A-->>C: run summary with trace_ids.langfuse
 ```
 
----
-
-## 7. Read-Only Tool Policy
-
-The Analytical MoP Agent must only use read tools from both MCP servers.
-
-```mermaid
-flowchart TB
-    Agent[Analytical MoP Agent] --> ToolSelect{Tool Type?}
-
-    ToolSelect -->|K8s Read| AllowK[Allow]
-    ToolSelect -->|Helm Read| AllowH[Allow]
-    ToolSelect -->|K8s Mutation| DenyK[Deny in code]
-    ToolSelect -->|Helm Mutation| DenyH[Deny in code]
-
-    AllowK --> Execute[Execute Read Tool]
-    AllowH --> Execute
-    DenyK --> AuditDeny[Log/Trace blocked attempt]
-    DenyH --> AuditDeny
-```
-
----
-
-## 8. Storage Strategy
-
-### 8.1 PostgreSQL
-
-PostgreSQL is the source of truth for normalized scan runs and changed snapshots. It is suitable for later supervised ML feature engineering and exact historical queries.
-
-### 8.2 ClickHouse
-
-ClickHouse stores event/fact tables optimized for trend analysis, dashboarding, and later anomaly detection. It should receive compact analytical rows rather than very large raw payloads.
-
-### 8.3 Qdrant / pgvector
-
-Qdrant and pgvector are optional semantic memory stores. They can store compact textual summaries of operational observations such as:
-
-- "deployment memory-agent had 3 ready replicas and no restarts"
-- "helm release langflow revision changed from 3 to 4"
-- "pod status changed from Pending to Running"
-
-### 8.4 Redis
-
-Redis can cache latest hashes and latest namespace summary to avoid repeated database reads.
-
-### 8.5 Letta
-
-Letta adapter remains present but disabled. It should not be initialized unless explicitly enabled in future.
-
----
-
-## 9. Observability Design
-
-```mermaid
-flowchart LR
-    Agent[Analytical MoP Agent] --> TraceCtx[Trace Context]
-
-    TraceCtx --> LF[Langfuse Run Trace]
-    TraceCtx --> OTEL[OpenTelemetry Spans]
-    TraceCtx --> Logs[Structured JSON Logs]
-
-    OTEL --> SZ[SigNoz Collector]
-    Logs --> STDOUT[Container Logs]
-```
-
-Recommended span names:
+Langfuse root trace:
 
 ```text
-analytical_mop.scan.start
-analytical_mop.k8s.collect
-analytical_mop.helm.collect
-analytical_mop.normalize
-analytical_mop.change_detect
-analytical_mop.sink.postgres
-analytical_mop.sink.clickhouse
-analytical_mop.sink.qdrant
-analytical_mop.sink.redis
-analytical_mop.scan.complete
+data-ingestion.scan
+```
+
+Implemented child spans:
+
+```text
+collect.kubernetes
+collect.helm
+normalize
+hash
+detect_changes
+write_sinks
+write_memory
 ```
 
 ---
 
-## 10. Failure Handling
+## 7. Safety Design
 
-| Failure | Default Behavior |
+| Safety rule | Design choice |
 |---|---|
-| K8s MCP unavailable | Mark partial failure; continue Helm if enabled. |
-| Helm MCP unavailable | Mark partial failure; continue K8s if enabled. |
-| PostgreSQL unavailable | Skip sink in non-strict mode; trace error. |
-| ClickHouse unavailable | Skip sink in non-strict mode; trace error. |
-| Langfuse unavailable | Continue; log tracing failure. |
-| SigNoz unavailable | Continue; log OTel export failure. |
-| All sinks disabled | Stream/print result to caller/stdout. |
+| No direct Kubernetes access | Agent calls K8s MCP instead of Kubernetes API. |
+| No direct Helm mutation | Agent calls Helm MCP read operations only. |
+| No secret collection | Collectors avoid Kubernetes Secrets. |
+| No raw shell tooling | No `kubectl` or `helm` shell execution path. |
+| No LLM planner | Deterministic orchestrator avoids unreviewed autonomous behavior. |
+| Redacted health/config | Secret settings are redacted from safe config output. |
 
 ---
 
-## 11. HLD Mermaid — Run Lifecycle
+## 8. Runtime Decisions
 
-```mermaid
-stateDiagram-v2
-    [*] --> Idle
-    Idle --> ScheduledRun: interval reached
-    Idle --> OnDemandRun: API/MCP/LLM call
-
-    ScheduledRun --> InitializeRun
-    OnDemandRun --> InitializeRun
-
-    InitializeRun --> CollectK8s
-    InitializeRun --> CollectHelm
-
-    CollectK8s --> Normalize
-    CollectHelm --> Normalize
-
-    Normalize --> DetectChanges
-    DetectChanges --> PersistEnabled: sinks enabled
-    DetectChanges --> StreamOnly: no sinks enabled
-
-    PersistEnabled --> WritePostgres
-    PersistEnabled --> WriteClickHouse
-    PersistEnabled --> WriteMemoryStores
-
-    WritePostgres --> CompleteRun
-    WriteClickHouse --> CompleteRun
-    WriteMemoryStores --> CompleteRun
-    StreamOnly --> CompleteRun
-
-    CompleteRun --> Idle
-```
-
----
-
-## 12. HLD Decision Summary
-
-| Decision | Choice |
+| Decision | Current implementation |
 |---|---|
-| Runtime style | Long-running service with scheduler + API. |
-| Agent behavior | Read-only ETL scanner. |
-| Tool access | Existing K8s MCP and Helm MCP read tools only. |
-| Persistence | Optional PostgreSQL and ClickHouse first. |
-| Memory | Optional Qdrant, pgvector, Redis, LangMem. |
-| Letta | Adapter available but disabled. |
-| Observability | Langfuse + SigNoz optional and configurable. |
-| Fallback | Stream/print if all sinks disabled. |
+| API framework | FastAPI |
+| MCP transport | Streamable HTTP mounted at `/mcp` |
+| Langfuse | Enabled by default, disableable by config |
+| Langfuse URL | `http://langfuse-web.bosgenesis.svc.cluster.local:3000` |
+| Sink defaults | Postgres, ClickHouse, Qdrant, Redis enabled |
+| Deploy sink override | `playbook/deploy.sh` prompt/env overrides |
+| LangChain | Not used; not needed for deterministic ETL |
+| Langflow | Importable visualization and read-only status flow |

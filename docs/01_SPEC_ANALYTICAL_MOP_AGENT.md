@@ -1,503 +1,234 @@
-# Analytical MoP Agent — Spec-Driven Development Specification
+# BOS Genesis K8s Data Ingestion Agent - Specification
 
-**Document status:** Draft v1.0  
-**Target platform:** BOS Genesis / BOS AI Studio  
-**Agent name:** `analytical-mop-agent`  
-**Primary mode:** Periodic namespace scanner and analytical ETL agent  
-**Secondary mode:** On-demand callable agent/tool for LLMs and other agents  
-**Initial namespace:** `bosgenesis`  
-**Execution posture:** Read-only collection, persistence, trace, and stream/print fallback  
+**Document status:** Implemented baseline  
+**Service name:** `bosgenesis-k8s-data-ingestion-agent`  
+**Python package:** `bosgenesis_k8s_data_ingestion_agent`  
+**Namespace:** `bosgenesis`  
+**Primary mode:** Kubernetes service with REST API, remote MCP endpoint, scheduler, and optional worker-style startup scan  
+**Execution posture:** Read-only collection, deterministic ETL, configurable sinks, Langfuse tracing
 
 ---
 
 ## 1. Purpose
 
-The Analytical MoP Agent is a long-running ETL-style agent that periodically scans a configured Kubernetes namespace using existing BOS Genesis tools and MCP servers. It collects Kubernetes and Helm operational state, detects whether the collected state has changed, and persists only new or changed snapshots into configured analytical stores.
+The BOS Genesis K8s Data Ingestion Agent collects operational state from the BOS Genesis Kubernetes namespace by calling existing MCP servers. It normalizes the collected data, computes stable hashes, detects changed records, writes enabled sinks, and emits Langfuse traces.
 
-The agent does **not** perform anomaly detection, alerting, remediation, MoP execution, Helm mutation, Kubernetes mutation, or autonomous action. Its role is to create a clean operational data foundation for later machine learning, anomaly detection, analytics, and future MoP-generation agents.
-
----
-
-## 2. Business Motivation
-
-BOS Genesis already has operational components such as Kubernetes MCP, Helm MCP, PostgreSQL, ClickHouse, Qdrant, Redis, Langfuse, SigNoz, Kafka, LangGraph/LangMem-style memory, and other observability components. The Analytical MoP Agent connects these components into a consistent data collection layer.
-
-This enables future use cases such as:
-
-- Kubernetes namespace health trend analysis.
-- Helm release drift analysis.
-- Deployment lifecycle history.
-- Resource change timeline.
-- MoP readiness scoring.
-- Later anomaly detection using PostgreSQL/pgvector/ClickHouse/Qdrant.
-- Agentic troubleshooting memory.
-- Evidence collection for MoP generation.
+The agent is not a remediation service. It does not mutate Kubernetes, Helm, databases, or application resources.
 
 ---
 
-## 3. Scope
+## 2. Implemented Architecture
 
-### 3.1 In Scope
+```mermaid
+flowchart LR
+    Client["Codex / GPT-5 / Agent"] --> MCP["Agent /mcp endpoint"]
+    Client --> REST["Agent REST API"]
 
-- Periodically scan the configured namespace.
-- Collect data using Kubernetes Inspector MCP read tools.
-- Collect data using Helm Manager MCP read tools.
-- Normalize Kubernetes and Helm state into a canonical observation model.
-- Compute content hash/change fingerprint per resource/release snapshot.
-- Insert new/changed data into PostgreSQL when enabled.
-- Insert analytical facts/events into ClickHouse when enabled.
-- Optionally write semantic memory/index records into Qdrant/pgvector when enabled.
-- Optionally cache latest snapshot/deduplication state in Redis when enabled.
-- Trace every agent run and major operation using Langfuse when enabled.
-- Emit OpenTelemetry traces to SigNoz when enabled.
-- Expose an on-demand API endpoint and/or MCP-callable tool surface.
-- Stream collected data to caller or print to stdout if all persistence components are disabled.
-- Include Letta adapter skeleton but keep it disabled by configuration.
+    MCP --> Workflow["Internal scan workflow"]
+    REST --> Workflow
+    Scheduler["Scheduler / startup scan"] --> Workflow
 
-### 3.2 Out of Scope
+    Workflow --> K8S["K8s Inspector MCP"]
+    Workflow --> Helm["Helm Manager MCP"]
 
-- Anomaly detection.
-- Alerting.
-- MoP execution.
+    K8S --> Normalize["Normalize + hash + detect changes"]
+    Helm --> Normalize
+
+    Normalize --> Postgres[("Postgres")]
+    Normalize --> ClickHouse[("ClickHouse")]
+    Normalize --> Qdrant[("Qdrant")]
+    Normalize --> Redis[("Redis")]
+
+    Workflow --> Langfuse["Langfuse traces"]
+    Workflow --> Logs["Structured logs"]
+    Workflow -. "optional future" .-> Signoz["SigNoz / OTLP"]
+```
+
+---
+
+## 3. In Scope
+
+- Expose REST endpoints:
+  - `GET /health`
+  - `POST /scan/run`
+  - `GET /scan/latest`
+  - `GET /config/effective`
+- Expose remote MCP endpoint at `/mcp`.
+- Provide MCP tools:
+  - `data_ingestion_health`
+  - `data_ingestion_run_scan`
+  - `data_ingestion_latest_scan`
+  - `data_ingestion_effective_config`
+- Use K8s Inspector MCP read tools only.
+- Use Helm Manager MCP read tools only.
+- Normalize Kubernetes and Helm responses into canonical observations.
+- Compute stable content hashes.
+- Write changed records to enabled sinks.
+- Trace scan lifecycle with Langfuse.
+- Provide visualization-only and read-only working Langflow flow JSON files.
+
+---
+
+## 4. Out of Scope
+
 - Kubernetes mutation.
 - Helm mutation.
-- Automated remediation.
-- Production change approval.
-- Direct `kubectl` or `helm` shell execution from this agent.
 - Secret collection.
-- RBAC mutation.
-- Cross-namespace inspection unless explicitly configured later.
+- Direct `kubectl` or `helm` shell execution.
+- Autonomous remediation.
+- Anomaly detection.
+- Alerting.
+- LangChain/LangGraph orchestration. The current workflow is deterministic ETL and does not require LLM chain orchestration.
 
 ---
 
-## 4. Existing Tool Dependencies
+## 5. External Dependencies
 
-### 4.1 Kubernetes Inspector MCP
+### 5.1 K8s Inspector MCP
 
-The agent uses the existing namespace-scoped Kubernetes Inspector MCP server.
-
-Default endpoint:
+In-cluster URL:
 
 ```text
-http://k8s-inspector.bosgenesis.local/mcp
+http://bosgenesis-k8s-inspector-mcp.bosgenesis.svc.cluster.local:8080/mcp
 ```
 
-Read tools expected:
-
-- `k8s_namespace_summary`
-- `k8s_list_pods`
-- `k8s_describe_pod`
-- `k8s_get_pod_logs`
-- `k8s_list_services`
-- `k8s_list_pvcs`
-- `k8s_describe_pvc`
-- `k8s_list_deployments`
-- `k8s_list_statefulsets`
-- `k8s_list_ingresses`
-- `k8s_list_events`
-
-### 4.2 Helm Manager MCP
-
-The agent uses the existing Helm MCP server.
-
-Default endpoint:
+Host header:
 
 ```text
-http://helm-manager.bosgenesis.local/mcp
+k8s-inspector.bosgenesis.local
 ```
 
-Read tools expected:
+### 5.2 Helm Manager MCP
 
-- `helm_list_releases`
-- `helm_release_status`
-- `helm_release_history`
-- `helm_get_values`
-- `helm_get_manifest`
-- `helm_show_chart`
-- `helm_template_chart`
-- `helm_repo_list`
+In-cluster URL:
 
----
+```text
+http://bosgenesis-helm-manager-mcp.bosgenesis.svc.cluster.local:8080/mcp
+```
 
-## 5. User Stories
+Host header:
 
-### US-1 — Periodic namespace scan
+```text
+helm-manager.bosgenesis.local
+```
 
-As a platform engineer, I want the agent to scan the `bosgenesis` namespace periodically so that operational state is captured without manual effort.
+### 5.3 Langfuse
 
-**Acceptance criteria:**
+The pod must use Kubernetes service DNS:
 
-- Agent starts as a long-running service.
-- Scan interval is configurable.
-- Each scan has a unique `run_id` and `correlation_id`.
-- Each scan uses MCP read tools only.
-- Each scan is traced when tracing is enabled.
+```text
+http://langfuse-web.bosgenesis.svc.cluster.local:3000
+```
 
-### US-2 — Store changed data in PostgreSQL
-
-As a data engineer, I want only changed snapshots stored in PostgreSQL so that I can train future ML models without unnecessary duplication.
-
-**Acceptance criteria:**
-
-- PostgreSQL can be enabled/disabled by config.
-- Data model supports scan runs, resource snapshots, Helm release snapshots, and change events.
-- If a resource hash is unchanged, the agent does not insert a duplicate snapshot unless full history mode is enabled.
-
-### US-3 — Store analytics data in ClickHouse
-
-As an analytics engineer, I want lightweight facts/events in ClickHouse so dashboards can show trends and operational patterns.
-
-**Acceptance criteria:**
-
-- ClickHouse can be enabled/disabled by config.
-- Run summaries and resource facts are inserted into ClickHouse when enabled.
-- Failed ClickHouse insert does not crash the whole agent unless strict mode is enabled.
-
-### US-4 — Trace every operation
-
-As an SRE, I want every scan and MCP call traced so that I can debug the collector itself.
-
-**Acceptance criteria:**
-
-- Langfuse tracing can be enabled/disabled.
-- SigNoz/OpenTelemetry can be enabled/disabled.
-- Each MCP call has a span.
-- Each persistence operation has a span.
-- Each run includes status, latency, counts, and errors.
-
-### US-5 — On-demand invocation
-
-As another agent or LLM, I want to call the Analytical MoP Agent on demand to get a fresh namespace snapshot.
-
-**Acceptance criteria:**
-
-- Exposes `POST /scan/run` for immediate scan.
-- Optional MCP tool `analytical_mop_scan_namespace` is available.
-- Response can stream/return data if no persistence is enabled.
-
-### US-6 — Memory integration
-
-As a future MoP/troubleshooting agent, I want this agent to write useful operational observations into BOS Genesis memory stores.
-
-**Acceptance criteria:**
-
-- Qdrant memory sink is configurable.
-- pgvector memory sink is configurable.
-- Redis latest-state cache is configurable.
-- LangMem-compatible extraction hook exists.
-- Letta adapter exists but is disabled by default.
+The UI/ingress hostname may differ and should not be used by the pod unless cluster DNS can resolve it.
 
 ---
 
 ## 6. Functional Requirements
 
-| ID | Requirement |
-|---|---|
-| FR-1 | Agent shall run as a long-running service. |
-| FR-2 | Agent shall support periodic scheduled scan. |
-| FR-3 | Agent shall support on-demand scan through REST API. |
-| FR-4 | Agent shall optionally expose MCP tool surface for other agents. |
-| FR-5 | Agent shall call K8s MCP read tools only. |
-| FR-6 | Agent shall call Helm MCP read tools only. |
-| FR-7 | Agent shall normalize all collected data into canonical observation records. |
-| FR-8 | Agent shall compute stable content hashes for deduplication/change detection. |
-| FR-9 | Agent shall persist changed snapshots into PostgreSQL when enabled. |
-| FR-10 | Agent shall persist analytical event/fact rows into ClickHouse when enabled. |
-| FR-11 | Agent shall write semantic memory records into Qdrant when enabled. |
-| FR-12 | Agent shall write vector memory into pgvector when enabled. |
-| FR-13 | Agent shall cache latest resource hash/state in Redis when enabled. |
-| FR-14 | Agent shall emit Langfuse traces when enabled. |
-| FR-15 | Agent shall emit OpenTelemetry traces for SigNoz when enabled. |
-| FR-16 | Agent shall stream or print results if all persistence sinks are disabled. |
-| FR-17 | Agent shall not perform anomaly detection or alerting. |
-| FR-18 | Agent shall not mutate Kubernetes or Helm state. |
-| FR-19 | Agent shall keep Letta adapter disabled by default. |
-| FR-20 | Agent shall maintain structured run summaries. |
+| ID | Requirement | Status |
+|---|---|---|
+| FR-1 | Run as FastAPI service. | Implemented |
+| FR-2 | Expose `/mcp` Streamable HTTP MCP endpoint. | Implemented |
+| FR-3 | Support on-demand scan through REST. | Implemented |
+| FR-4 | Support on-demand scan through MCP. | Implemented |
+| FR-5 | Support scheduled/startup scans. | Implemented |
+| FR-6 | Call only allowlisted K8s MCP read tools. | Implemented |
+| FR-7 | Call only allowlisted Helm MCP read tools. | Implemented |
+| FR-8 | Normalize collected records. | Implemented |
+| FR-9 | Compute stable hashes. | Implemented |
+| FR-10 | Detect changed records. | Implemented |
+| FR-11 | Write Postgres sink when enabled. | Implemented |
+| FR-12 | Write ClickHouse sink when enabled. | Implemented |
+| FR-13 | Write Qdrant memory sink when enabled. | Implemented |
+| FR-14 | Write Redis latest-state sink when enabled. | Implemented |
+| FR-15 | Emit Langfuse traces when enabled and configured. | Implemented |
+| FR-16 | Allow sink enablement overrides from `deploy.sh`. | Implemented |
+| FR-17 | Provide Langflow visualization artifact. | Implemented |
+| FR-18 | Provide read-only working Langflow status flow. | Implemented |
 
 ---
 
-## 7. Non-Functional Requirements
+## 7. Configuration
 
-| ID | Requirement |
-|---|---|
-| NFR-1 | Configuration-driven; all external dependencies must be optional. |
-| NFR-2 | Fail-soft mode by default for optional sinks. |
-| NFR-3 | Strict mode available to fail run when mandatory sink fails. |
-| NFR-4 | Idempotent periodic scans. |
-| NFR-5 | No secrets collected or persisted. |
-| NFR-6 | Structured JSON logs. |
-| NFR-7 | Suitable for Kubernetes deployment in `bosgenesis`. |
-| NFR-8 | Supports local development mode. |
-| NFR-9 | Modular sink architecture. |
-| NFR-10 | Agent should be safe to run frequently without database explosion. |
+Important runtime settings:
 
----
+```text
+NAMESPACE=bosgenesis
+API_HOST=0.0.0.0
+API_PORT=8080
+MCP_ALLOWED_HOSTS=data-ingestion-agent.bosgenesis.local,...
 
-## 8. Configuration Specification
+K8S_MCP_URL=http://bosgenesis-k8s-inspector-mcp.bosgenesis.svc.cluster.local:8080/mcp
+K8S_MCP_HOST_HEADER=k8s-inspector.bosgenesis.local
 
-Environment variables should override YAML configuration.
+HELM_MCP_URL=http://bosgenesis-helm-manager-mcp.bosgenesis.svc.cluster.local:8080/mcp
+HELM_MCP_HOST_HEADER=helm-manager.bosgenesis.local
 
-```yaml
-agent:
-  name: analytical-mop-agent
-  namespace: bosgenesis
-  scan_interval_seconds: 300
-  run_on_startup: true
-  strict_mode: false
-  full_history_mode: false
+POSTGRES_ENABLED=true
+CLICKHOUSE_ENABLED=true
+QDRANT_ENABLED=true
+REDIS_ENABLED=true
+STDOUT_ENABLED=false
 
-mcp:
-  k8s_inspector:
-    enabled: true
-    endpoint: http://k8s-inspector.bosgenesis.local/mcp
-    timeout_seconds: 30
-  helm_manager:
-    enabled: true
-    endpoint: http://helm-manager.bosgenesis.local/mcp
-    timeout_seconds: 30
-
-sinks:
-  postgres:
-    enabled: true
-    dsn: postgresql://user:password@postgresql.bosgenesis.svc.cluster.local:5432/bosgenesis
-    use_pgvector: false
-  clickhouse:
-    enabled: true
-    host: clickhouse.bosgenesis.svc.cluster.local
-    port: 8123
-    database: bosgenesis
-  qdrant:
-    enabled: false
-    url: http://qdrant.bosgenesis.svc.cluster.local:6333
-    collection: analytical_mop_observations
-  redis:
-    enabled: false
-    url: redis://redis.bosgenesis.svc.cluster.local:6379/0
-  langmem:
-    enabled: false
-  letta:
-    enabled: false
-    url: http://letta.bosgenesis.local
-
-observability:
-  langfuse:
-    enabled: true
-    host: http://langfuse-web.bosgenesis.svc.cluster.local:3000
-  signoz:
-    enabled: true
-    otlp_endpoint: http://signoz-otel-collector.signoz:4317
-  kafka_events:
-    enabled: false
-    bootstrap_servers: kafka.bosgenesis.svc.cluster.local:9092
-    topic: analytical-mop-agent-events
-
-api:
-  enabled: true
-  host: 0.0.0.0
-  port: 8080
-  api_key_required: true
+LANGFUSE_ENABLED=true
+LANGFUSE_BASE_URL=http://langfuse-web.bosgenesis.svc.cluster.local:3000
+LANGFUSE_PUBLIC_KEY=<from secret>
+LANGFUSE_SECRET_KEY=<from secret>
 ```
 
+`playbook/deploy.sh` can override sink enablement at deployment time. Defaults enable Postgres, ClickHouse, Qdrant, and Redis.
+
 ---
 
-## 9. Canonical Observation Model
-
-### 9.1 Scan Run
+## 8. Scan Summary Contract
 
 ```json
 {
   "run_id": "uuid",
   "correlation_id": "uuid",
-  "agent_name": "analytical-mop-agent",
   "namespace": "bosgenesis",
-  "trigger_type": "scheduled|on_demand|mcp",
+  "status": "success",
   "started_at": "timestamp",
-  "completed_at": "timestamp",
-  "status": "success|partial_success|failed",
-  "resources_seen": 0,
-  "resources_changed": 0,
+  "finished_at": "timestamp",
+  "resources_seen": 258,
+  "resources_changed": 34,
   "helm_releases_seen": 0,
   "helm_releases_changed": 0,
-  "error_count": 0
+  "sinks_used": ["postgres", "clickhouse", "qdrant", "redis"],
+  "trace_ids": {
+    "langfuse": "trace-id"
+  },
+  "errors": []
 }
 ```
 
-### 9.2 Resource Snapshot
+---
 
-```json
-{
-  "snapshot_id": "uuid",
-  "run_id": "uuid",
-  "namespace": "bosgenesis",
-  "source": "k8s_mcp",
-  "resource_type": "pod|deployment|service|ingress|pvc|event|statefulset",
-  "resource_name": "string",
-  "resource_uid": "string|null",
-  "observed_at": "timestamp",
-  "status_summary": "string",
-  "content_hash": "sha256",
-  "raw_payload": {},
-  "normalized_payload": {}
-}
+## 9. Langflow Artifacts
+
+```mermaid
+flowchart TB
+    Arch["data-ingestion-agent-architecture.json"] --> Purpose1["Visualization-only architecture graph"]
+    Status["data-ingestion-agent-status-flow.json"] --> Purpose2["Read-only working flow"]
+    Purpose2 --> Health["GET /health"]
+    Purpose2 --> Latest["GET /scan/latest"]
 ```
 
-### 9.3 Helm Release Snapshot
+Files:
 
-```json
-{
-  "snapshot_id": "uuid",
-  "run_id": "uuid",
-  "namespace": "bosgenesis",
-  "source": "helm_mcp",
-  "release_name": "string",
-  "revision": 1,
-  "chart": "string",
-  "app_version": "string|null",
-  "status": "deployed|failed|pending|unknown",
-  "observed_at": "timestamp",
-  "content_hash": "sha256",
-  "values_hash": "sha256|null",
-  "manifest_hash": "sha256|null",
-  "raw_payload": {},
-  "normalized_payload": {}
-}
-```
+- `langflow/data-ingestion-agent-architecture.json`
+- `langflow/data-ingestion-agent-status-flow.json`
 
 ---
 
 ## 10. Acceptance Criteria
 
-| ID | Acceptance Criteria |
-|---|---|
-| AC-1 | Agent starts with only K8s MCP enabled and no database enabled. |
-| AC-2 | Agent prints/streams collected data when all sinks are disabled. |
-| AC-3 | Agent successfully scans namespace using K8s MCP. |
-| AC-4 | Agent successfully scans Helm releases using Helm MCP. |
-| AC-5 | Agent inserts scan run into PostgreSQL when enabled. |
-| AC-6 | Agent inserts resource snapshots only when hash changes. |
-| AC-7 | Agent inserts analytical facts into ClickHouse when enabled. |
-| AC-8 | Agent emits Langfuse trace when enabled. |
-| AC-9 | Agent emits OpenTelemetry spans visible in SigNoz when enabled. |
-| AC-10 | Agent exposes `POST /scan/run`. |
-| AC-11 | Agent exposes `GET /health`. |
-| AC-12 | Agent returns partial success when optional sink fails in non-strict mode. |
-| AC-13 | Agent never calls mutation tools. |
-| AC-14 | Agent has Letta adapter class/module but disabled by default. |
-
----
-
-## 11. Suggested Project Structure
-
-```text
-analytical-mop-agent/
-  README.md
-  pyproject.toml
-  Dockerfile
-  .env.example
-
-  src/analytical_mop_agent/
-    main.py
-    config.py
-    api.py
-    scheduler.py
-    models.py
-    orchestrator.py
-
-    mcp_clients/
-      base.py
-      k8s_inspector_client.py
-      helm_manager_client.py
-
-    collectors/
-      namespace_collector.py
-      helm_collector.py
-      log_collector.py
-      event_collector.py
-
-    normalize/
-      k8s_normalizer.py
-      helm_normalizer.py
-      hashing.py
-
-    sinks/
-      base.py
-      postgres_sink.py
-      clickhouse_sink.py
-      qdrant_sink.py
-      redis_sink.py
-      pgvector_sink.py
-      langmem_sink.py
-      letta_sink_disabled.py
-      stdout_sink.py
-
-    observability/
-      trace_context.py
-      langfuse_tracer.py
-      otel_tracer.py
-      structured_logger.py
-
-    memory/
-      memory_router.py
-      memory_record_builder.py
-
-    tests/
-      test_hashing.py
-      test_config.py
-      test_normalizers.py
-      test_stdout_fallback.py
-      test_no_mutation_tools.py
-
-  k8s/
-    deployment.yaml
-    service.yaml
-    ingress.yaml
-    configmap.yaml
-    secret.yaml
-    cronjob-optional.yaml
-```
-
----
-
-## 12. Mermaid — Spec View
-
-```mermaid
-flowchart LR
-    Trigger[Scheduled / On-demand / MCP call] --> Agent[Analytical MoP Agent]
-
-    Agent --> K8S[K8s Inspector MCP Read Tools]
-    Agent --> HELM[Helm Manager MCP Read Tools]
-
-    K8S --> Normalize[Normalize + Hash]
-    HELM --> Normalize
-
-    Normalize --> Changed{Changed?}
-    Changed -->|No| Skip[Skip Duplicate Snapshot]
-    Changed -->|Yes| Persist[Persist Snapshot]
-
-    Persist --> PG[(PostgreSQL)]
-    Persist --> CH[(ClickHouse)]
-    Persist --> QD[(Qdrant / pgvector Optional)]
-    Persist --> REDIS[(Redis Latest State Optional)]
-
-    Agent --> LF[Langfuse Trace]
-    Agent --> SZ[SigNoz / OTel Trace]
-
-    Skip --> Summary[Run Summary]
-    Persist --> Summary
-    Summary --> Caller[Return / Stream / Print]
-```
-
----
-
-## 13. Definition of Done
-
-The agent is considered done when:
-
-- It can run continuously in Kubernetes.
-- It can scan namespace and Helm state periodically.
-- It can be triggered on-demand.
-- It persists only changed observations when PostgreSQL is enabled.
-- It writes analytical facts when ClickHouse is enabled.
-- It traces each run through Langfuse and SigNoz when enabled.
-- It does not mutate cluster or Helm state.
-- It degrades gracefully to stdout/streaming mode when all optional dependencies are disabled.
+- `/health` returns safe effective configuration with secrets redacted.
+- `/mcp` exposes all four data-ingestion MCP tools.
+- `data_ingestion_run_scan` returns a successful scan summary.
+- Langfuse shows trace root `data-ingestion.scan` with child spans.
+- Pod-side Langfuse base URL uses `langfuse-web.bosgenesis.svc.cluster.local:3000`.
+- Optional sinks can be enabled or disabled from Helm values and `deploy.sh`.
+- No secrets are committed.
+- No Kubernetes or Helm mutation tools are called.
